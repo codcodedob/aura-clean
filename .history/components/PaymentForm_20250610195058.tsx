@@ -1,17 +1,15 @@
 // components/PaymentForm.tsx
 import React, { useEffect, useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
-
 import {
   Elements,
   CardElement,
   useStripe,
   useElements
 } from '@stripe/react-stripe-js'
-//import { supabase } from '@/lib/supabaseClient'
+import { supabase } from '@/lib/supabaseClient'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
-//const response = await fetch('/api/create-checkout', { method: 'POST', … })
 
 function CheckoutForm({ coinId, amount }: { coinId: string; amount: number }) {
   const stripe = useStripe()
