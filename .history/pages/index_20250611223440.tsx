@@ -74,13 +74,12 @@ export default function Home() {
   }
 
   const handleStripeBuy = async (coin: Coin) => {
-    setBuyingId(coin.id)
-    try {
-      const res = await fetch('/api/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coinId: coin.id }),
-      })
+    const res = await fetch('/api/create-checkout', {
+      method: 'POST', // ✅ Must be POST
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coinId: coin.id }),
+    })
+  
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Checkout session failed')
       const stripe = await stripePromise
