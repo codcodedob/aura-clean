@@ -1,35 +1,34 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+// pages/api/create-checkout.ts
+import type { NextApiRequest, NextApiResponse } from 'next'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-05-28.basil',
+  apiVersion: '2022-11-15',
 })
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ofhpjvbmrfwbmboxibur.supabase.co'
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+)
 
-if (!supabaseKey) {
-  throw new Error('supabaseKey is required.')
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey)
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse): Promise<void> {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST'])
-    return res.status(405).json({ error: 'Method Not Allowed' })
+    return res.status(405).end('Method Not Allowed')
   }
 
   try {
-    const { coinId } = req.body as { coinId: string }
-    if (!coinId) {
-      return res.status(400).json({ error: 'Missing coinId' })
+    const body = req.body as { coinId: string; amount: number; resaleMode?: string }
+    const { coinId, amount, resaleMode } = body
+
+    if (!coinId || !amount) {
+      return res.status(400).json({ error: 'Missing coinId or amount' })
     }
 
     const { data: coin, error } = await supabase
       .from('aura_coins')
-      .select('id, name, price')
+      .select('id, name')
       .eq('id', coinId)
       .single()
 
@@ -37,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Coin not found' })
     }
 
-    const unitAmount = Math.round(coin.price * 100)
+    const unitAmount = parseInt(amount.toString(), 10)
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -54,7 +53,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       ],
       mode: 'payment',
-      metadata: { coinId: coin.id },
+      metadata: {
+        coinId: coin.id,
+        resaleMode: resaleMode || 'ai',
+        investment: unitAmount.toString(),
+      },
       success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin}/`,
     })
@@ -62,6 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({ sessionId: session.id })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('❌ Checkout error:', message)
     res.status(500).json({ error: message })
   }
 }
