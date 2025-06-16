@@ -25,9 +25,8 @@ export default function Marketplace() {
         const json = await res.json()
         if (!res.ok) throw new Error(json.error || 'Failed to fetch coins')
         setCoins(json)
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-        setError(errorMessage)
+      } catch (err: any) {
+        setError(err.message)
       } finally {
         setLoading(false)
       }
@@ -36,7 +35,7 @@ export default function Marketplace() {
     fetchCoins()
   }, [])
 
-  const filtered = coins.filter((c: Coin) =>
+  const filtered = coins.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     (c.emoji ?? '').includes(search)
   )
@@ -68,7 +67,7 @@ export default function Marketplace() {
         <p style={{ color: 'red' }}>{error}</p>
       ) : (
         <div style={{ display: 'grid', gap: 16 }}>
-          {filtered.map((c: Coin) => (
+          {filtered.map(c => (
             <div key={c.id} style={{
               background: '#111',
               padding: 16,

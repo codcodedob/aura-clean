@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { insertAuraCoin } from '@/lib/supabase/insertAuraCoin'
 
 export default function AdminCoinCreator() {
   const [name, setName] = useState('')
@@ -9,7 +10,7 @@ export default function AdminCoinCreator() {
   const [symbol, setSymbol] = useState('')
   const [status, setStatus] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('⏳ Inserting...')
 
@@ -71,7 +72,7 @@ export default function AdminCoinCreator() {
         <select
           className="border rounded w-full p-2"
           value={type}
-          onChange={e => setType(e.target.value as 'stock' | 'crypto' | '')}
+          onChange={e => setType(e.target.value as any)}
           required
         >
           <option value="">Select type</option>
