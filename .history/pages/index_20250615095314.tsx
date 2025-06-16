@@ -1,6 +1,3 @@
-// index.tsx
-// Includes Alpaca trading integration
-
 import React, { useEffect, useState, Suspense, lazy } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '@/lib/supabaseClient'
@@ -56,7 +53,15 @@ function CoinCard({ coin, amount, onAmountChange, onBuy }: {
   }
 
   return (
-    <div style={{ margin: '1rem 0', padding: '1rem', borderRadius: 8, border: '1px solid #ccc', background: 'var(--card-bg)', color: 'var(--text-color)', textAlign: 'center' }}>
+    <div style={{
+      margin: '1rem 0',
+      padding: '1rem',
+      borderRadius: 8,
+      border: '1px solid #ccc',
+      background: 'var(--card-bg)',
+      color: 'var(--text-color)',
+      textAlign: 'center'
+    }}>
       <strong style={{ fontSize: 18 }}>{coin.emoji ?? '🪙'} {coin.name}</strong>
       <p>${coin.price.toFixed(2)} · cap {coin.cap}</p>
       <input
@@ -65,9 +70,31 @@ function CoinCard({ coin, amount, onAmountChange, onBuy }: {
         min={coin.price}
         step="0.01"
         onChange={handleChange}
-        style={{ marginTop: 8, padding: 8, width: '80%', borderRadius: 6, border: '1px solid #ccc', background: 'var(--input-bg)', color: 'var(--text-color)' }}
+        style={{
+          marginTop: 8,
+          padding: 8,
+          width: '80%',
+          borderRadius: 6,
+          border: '1px solid #ccc',
+          background: 'var(--input-bg)',
+          color: 'var(--text-color)'
+        }}
       />
-      <button onClick={() => onBuy(coin.id)} style={{ marginTop: 12, padding: '10px 18px', borderRadius: 8, background: '#2563eb', color: '#ffffff', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>Buy</button>
+      <button
+        onClick={() => onBuy(coin.id)}
+        style={{
+          marginTop: 12,
+          padding: '10px 18px',
+          borderRadius: 8,
+          background: '#2563eb',
+          color: '#ffffff',
+          fontWeight: 'bold',
+          border: 'none',
+          cursor: 'pointer'
+        }}
+      >
+        Buy
+      </button>
     </div>
   )
 }
@@ -82,8 +109,6 @@ export default function Home() {
   const [mode, setMode] = useState<'focused' | 'full-body'>('focused')
   const [gridMode, setGridMode] = useState(false)
   const [avatarKey, setAvatarKey] = useState(0)
-  const [refreshing, setRefreshing] = useState(false)
-  const [message, setMessage] = useState('')
   const router = useRouter()
 
   const fullBodyModels = [
@@ -93,26 +118,6 @@ export default function Home() {
     '/models/base-inner.glb',
     '/models/base-outer.glb'
   ]
-
-  const refreshMarketData = async () => {
-    setRefreshing(true)
-    setMessage('Refreshing market data...')
-
-    try {
-      const res = await fetch('https://ofhpjvbmrfwbmboxibur.functions.supabase.co/admin_refresh_coins', {
-        method: 'POST',
-      })
-
-      const text = await res.text()
-      setMessage(res.ok ? `✅ Refreshed: ${text}` : `❌ Failed: ${text}`)
-    } catch (err) {
-      console.error(err)
-      setMessage('❌ Error occurred while refreshing.')
-    } finally {
-      setRefreshing(false)
-      setTimeout(() => setMessage(''), 5000)
-    }
-  }
 
   useEffect(() => {
     document.documentElement.style.setProperty('--card-bg', darkMode ? '#1f2937' : '#ffffff')
@@ -174,23 +179,6 @@ export default function Home() {
       amount,
       description: `Intent to purchase $${amount}`
     })
-
-    if (coin.symbol && coin.type === 'stock') {
-      const alpacaRes = await fetch('/api/alpaca-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol: coin.symbol, qty: 1, side: 'buy' })
-      })
-
-      const alpacaJson = await alpacaRes.json()
-
-      if (!alpacaRes.ok) {
-        alert(`Alpaca order failed: ${alpacaJson.error || 'Unknown error'}`)
-        return
-      }
-
-      alert(`✅ Stock order placed for ${coin.symbol}`)
-    }
 
     const res = await fetch('/api/create-checkout', {
       method: 'POST',
@@ -293,32 +281,7 @@ export default function Home() {
           }}>Logout</button>
         )}
 
-        <div style={{ marginTop: 20 }}>
-          <button
-            onClick={refreshMarketData}
-            disabled={refreshing}
-            style={{
-              padding: '10px 16px',
-              borderRadius: 6,
-              background: refreshing ? '#999' : '#10b981',
-              color: 'white',
-              fontWeight: 'bold',
-              border: 'none',
-              cursor: refreshing ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {refreshing ? 'Refreshing...' : 'Manual Market Refresh'}
-          </button>
-          {message && (
-            <p style={{ marginTop: 10, color: message.startsWith('✅') ? 'green' : 'red' }}>
-              {message}
-            </p>
-          )}
-        </div>
-
-        <Link href="/transactions">View Transactions</Link><Link href="/admin/dashboard" className="text-blue-500 hover:underline">
-  Admin Dashboard
-</Link>
+        <Link href="/transactions">View Transactions</Link>
       </div>
 
       <div style={{ flex: 1, padding: 20 }}>

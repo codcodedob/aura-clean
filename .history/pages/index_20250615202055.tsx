@@ -316,9 +316,7 @@ export default function Home() {
           )}
         </div>
 
-        <Link href="/transactions">View Transactions</Link><Link href="/admin/dashboard" className="text-blue-500 hover:underline">
-  Admin Dashboard
-</Link>
+        <Link href="/transactions">View Transactions</Link>
       </div>
 
       <div style={{ flex: 1, padding: 20 }}>
@@ -330,7 +328,9 @@ export default function Home() {
           </div>
         ))}
       </div>
-
+      <Link href="/admin/dashboard" className="text-blue-500 hover:underline">
+  Admin Dashboard
+</Link>
       <button
         onClick={() => setDarkMode(!darkMode)}
         style={{ position: 'fixed', top: 10, right: 10, zIndex: 1000 }}

@@ -316,9 +316,7 @@ export default function Home() {
           )}
         </div>
 
-        <Link href="/transactions">View Transactions</Link><Link href="/admin/dashboard" className="text-blue-500 hover:underline">
-  Admin Dashboard
-</Link>
+        <Link href="/transactions">View Transactions</Link>
       </div>
 
       <div style={{ flex: 1, padding: 20 }}>

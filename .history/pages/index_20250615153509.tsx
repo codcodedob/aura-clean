@@ -23,6 +23,10 @@ interface Coin {
   type?: 'stock' | 'crypto'
 }
 
+
+
+
+
 const FocusedAvatar = lazy(() => import('@/components/FocusedAvatar'))
 const FullBodyAvatar = lazy(() => import('@/components/FullBodyAvatar'))
 
@@ -82,10 +86,9 @@ export default function Home() {
   const [mode, setMode] = useState<'focused' | 'full-body'>('focused')
   const [gridMode, setGridMode] = useState(false)
   const [avatarKey, setAvatarKey] = useState(0)
+  const router = useRouter()
   const [refreshing, setRefreshing] = useState(false)
   const [message, setMessage] = useState('')
-  const router = useRouter()
-
   const fullBodyModels = [
     '/models/F1VISIONBALNCICHROME.glb',
     '/models/top.glb',
@@ -93,18 +96,22 @@ export default function Home() {
     '/models/base-inner.glb',
     '/models/base-outer.glb'
   ]
-
   const refreshMarketData = async () => {
     setRefreshing(true)
     setMessage('Refreshing market data...')
-
+  
     try {
       const res = await fetch('https://ofhpjvbmrfwbmboxibur.functions.supabase.co/admin_refresh_coins', {
         method: 'POST',
       })
-
+  
       const text = await res.text()
-      setMessage(res.ok ? `✅ Refreshed: ${text}` : `❌ Failed: ${text}`)
+  
+      if (res.ok) {
+        setMessage(`✅ Refreshed: ${text}`)
+      } else {
+        setMessage(`❌ Failed: ${text}`)
+      }
     } catch (err) {
       console.error(err)
       setMessage('❌ Error occurred while refreshing.')
@@ -113,7 +120,6 @@ export default function Home() {
       setTimeout(() => setMessage(''), 5000)
     }
   }
-
   useEffect(() => {
     document.documentElement.style.setProperty('--card-bg', darkMode ? '#1f2937' : '#ffffff')
     document.documentElement.style.setProperty('--text-color', darkMode ? '#f9fafb' : '#1a1a1a')
@@ -201,7 +207,12 @@ export default function Home() {
     const stripe = (await import('@stripe/stripe-js')).loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
     ;(await stripe)?.redirectToCheckout({ sessionId: json.sessionId })
   }
-
+  const refreshMarketData = async () => {
+    const res = await fetch('/api/refresh-coins')
+    const text = await res.text()
+    alert(text)
+  }
+  
   const filteredCoins = coins.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || (c.emoji ?? '').includes(search)
     const matchesType = filter === 'all' || c.type === filter
@@ -293,32 +304,34 @@ export default function Home() {
           }}>Logout</button>
         )}
 
-        <div style={{ marginTop: 20 }}>
-          <button
-            onClick={refreshMarketData}
-            disabled={refreshing}
-            style={{
-              padding: '10px 16px',
-              borderRadius: 6,
-              background: refreshing ? '#999' : '#10b981',
-              color: 'white',
-              fontWeight: 'bold',
-              border: 'none',
-              cursor: refreshing ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {refreshing ? 'Refreshing...' : 'Manual Market Refresh'}
-          </button>
-          {message && (
-            <p style={{ marginTop: 10, color: message.startsWith('✅') ? 'green' : 'red' }}>
-              {message}
-            </p>
-          )}
-        </div>
+{user?.email === 'burks.donte@gmail.com' && (
+  <div style={{ marginTop: 20 }}>
+    <button onClick={refreshMarketData} disabled={refreshing} style={{ padding: 10, borderRadius: 8 }}>
+      {refreshing ? 'Refreshing...' : '🔄 Refresh Market Data'}
+    </button>
+    {message && <p>{message}</p>}
+  </div>
+)}
 
-        <Link href="/transactions">View Transactions</Link><Link href="/admin/dashboard" className="text-blue-500 hover:underline">
-  Admin Dashboard
-</Link>
+{user?.email === 'burks.donte@gmail.com' && (
+  <button
+    onClick={refreshMarketData}
+    style={{
+      padding: '10px 18px',
+      marginTop: 12,
+      borderRadius: 8,
+      background: '#059669',
+      color: '#fff',
+      fontWeight: 'bold',
+      border: 'none',
+      cursor: 'pointer'
+    }}
+  >
+    🔄 Refresh Market Data
+  </button>
+)}
+
+        <Link href="/transactions">View Transactions</Link>
       </div>
 
       <div style={{ flex: 1, padding: 20 }}>

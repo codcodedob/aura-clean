@@ -292,7 +292,9 @@ export default function Home() {
             window.location.reload()
           }}>Logout</button>
         )}
-
+<Link href="/admin/dashboard" className="text-blue-500 hover:underline">
+  Admin Dashboard
+</Link>
         <div style={{ marginTop: 20 }}>
           <button
             onClick={refreshMarketData}
