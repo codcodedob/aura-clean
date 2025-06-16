@@ -23,7 +23,7 @@ interface Coin {
   type?: 'stock' | 'crypto'
 }
 
-const FocusedAvatar = lazy(() => import('@/components/FocusedAvatar'))
+const FocusedAvatar = lazy(() => import('@/components/FocusedAvatar')) as React.LazyExoticComponent<React.ComponentType<{}>>
 const FullBodyAvatar = lazy(() => import('@/components/FullBodyAvatar'))
 
 function CoinCard({ coin, amount, onAmountChange, onBuy }: {
@@ -100,7 +100,7 @@ export default function Home() {
 
     try {
       const res = await fetch('https://ofhpjvbmrfwbmboxibur.functions.supabase.co/admin_refresh_coins', {
-        method: 'POST'
+        method: 'POST',
       })
 
       const text = await res.text()
@@ -129,6 +129,26 @@ export default function Home() {
     fetch('/api/coins')
       .then(res => res.json())
       .then(data => setCoins(data || []))
+  }, [])
+
+  useEffect(() => {
+    // @ts-ignore
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)()
+    recognition.continuous = true
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase()
+      if (transcript.includes('let there be light')) {
+        setDarkMode(false)
+        speechSynthesis.speak(new SpeechSynthesisUtterance('Light mode activated'))
+      } else if (transcript.includes('let there be dark')) {
+        setDarkMode(true)
+        speechSynthesis.speak(new SpeechSynthesisUtterance('Dark mode activated'))
+      } else if (transcript.includes('logout')) {
+        supabase.auth.signOut().then(() => window.location.reload())
+      }
+    }
+    recognition.start()
+    return () => recognition.stop()
   }, [])
 
   const handleBuy = async (coinId: string) => {

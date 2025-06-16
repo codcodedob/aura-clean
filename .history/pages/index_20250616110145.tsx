@@ -23,7 +23,7 @@ interface Coin {
   type?: 'stock' | 'crypto'
 }
 
-const FocusedAvatar = lazy(() => import('@/components/FocusedAvatar'))
+const FocusedAvatar = lazy(() => import('@/components/FocusedAvatar')) as React.LazyExoticComponent<React.ComponentType<{}>>
 const FullBodyAvatar = lazy(() => import('@/components/FullBodyAvatar'))
 
 function CoinCard({ coin, amount, onAmountChange, onBuy }: {
