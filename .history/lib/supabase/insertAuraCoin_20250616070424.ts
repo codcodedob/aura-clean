@@ -1,4 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerComponentSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
 interface CoinInput {
@@ -11,7 +11,7 @@ interface CoinInput {
 
 export async function insertAuraCoin(coin: CoinInput) {
   const { name, price, type, emoji, symbol } = coin
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createServerComponentSupabaseClient({ cookies })
 
   const { data, error } = await supabase.from('coins').insert([
     {
