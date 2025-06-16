@@ -4,14 +4,14 @@ import { OrbitControls, useGLTF } from '@react-three/drei'
 import Image from 'next/image'
 import * as THREE from 'three'
 
-const CLOTHING_OPTIONS = ['Default', 'Casual', 'Business', 'Armor'] as const
-const AVATAR_MODELS: Record<typeof CLOTHING_OPTIONS[number], string> = {
+const CLOTHING_OPTIONS = ['Default', 'Casual', 'Business', 'Armor']
+const AVATAR_MODELS = {
   Default: '/avatars/avatar-default.glb',
   Casual: '/avatars/avatar-casual.glb',
   Business: '/avatars/avatar-business.glb',
   Armor: '/avatars/avatar-armor.glb'
 }
-const AVATAR_THUMBS: Record<typeof CLOTHING_OPTIONS[number], string> = {
+const AVATAR_THUMBS = {
   Default: '/avatars/thumb-default.jpg',
   Casual: '/avatars/thumb-casual.jpg',
   Business: '/avatars/thumb-business.jpg',
@@ -32,7 +32,7 @@ function Avatar({ modelPath }: { modelPath: string }) {
 }
 
 export default function AvatarClothingSelector() {
-  const [selectedClothing, setSelectedClothing] = useState<typeof CLOTHING_OPTIONS[number]>('Default')
+  const [selectedClothing, setSelectedClothing] = useState<string>('Default')
 
   return (
     <div style={{ width: '100%', maxWidth: 800, height: 600, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
