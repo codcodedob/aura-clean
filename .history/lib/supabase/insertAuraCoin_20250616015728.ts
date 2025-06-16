@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
+import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs/server'
 import { cookies } from 'next/headers'
 
 export async function insertAuraCoin({ name, price, type, emoji, symbol }) {
@@ -8,7 +8,7 @@ export async function insertAuraCoin({ name, price, type, emoji, symbol }) {
     {
       name,
       price,
-      type,
+      type,xa
       emoji,
       symbol,
     },
