@@ -89,12 +89,6 @@ export default function Home() {
   const [signupMode, setSignupMode] = useState(false)
   const [signupError, setSignupError] = useState('')
   const router = useRouter()
-  const [activePanel, setActivePanel] = useState<'left' | 'center' | 'right'>('center');
-
-
-  
-const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
-
 
   const fullBodyModels = [
     '/models/F1VISIONBALNCICHROME.glb',
@@ -122,11 +116,7 @@ const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? w
       setTimeout(() => setMessage(''), 5000)
     }
   }
-  useEffect(() => {
-    const onResize = () => setWindowWidth(window.innerWidth)
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, []);
+
   useEffect(() => {
     document.documentElement.style.setProperty('--card-bg', darkMode ? '#1f2937' : '#ffffff')
     document.documentElement.style.setProperty('--text-color', darkMode ? '#f9fafb' : '#1a1a1a')
@@ -208,27 +198,21 @@ const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? w
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      height: '100vh',
-      flexDirection: windowWidth < 800 ? 'column' : 'row'
-    }}>
-      {/* MOBILE TAB BAR */}
-      {windowWidth < 800 && (
-        <div style={{ display: 'flex', justifyContent: 'space-around', background: '#181825', padding: 10 }}>
-          <button onClick={() => setActivePanel('left')} style={{ color: activePanel === 'left' ? '#0af' : '#fff', fontWeight: 'bold', flex: 1 }}>Coins</button>
-          <button onClick={() => setActivePanel('center')} style={{ color: activePanel === 'center' ? '#0af' : '#fff', fontWeight: 'bold', flex: 1 }}>Profile</button>
-          <button onClick={() => setActivePanel('right')} style={{ color: activePanel === 'right' ? '#0af' : '#fff', fontWeight: 'bold', flex: 1 }}>Suite</button>
+    <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
+      {/* MOBILE NAVIGATION TABS */}
+      {typeof window !== "undefined" && window.innerWidth < 800 && (
+        <div style={{ display: 'flex', width: '100%', background: '#10101a', borderBottom: '1px solid #444', marginBottom: 8 }}>
+          <button onClick={() => setActivePanel('left')} style={{ flex: 1, color: activePanel==='left'?'#0af':'#fff', background:'none', border:'none', padding: 12 }}>Coins</button>
+          <button onClick={() => setActivePanel('center')} style={{ flex: 1, color: activePanel==='center'?'#0af':'#fff', background:'none', border:'none', padding: 12 }}>Avatar</button>
+          <button onClick={() => setActivePanel('right')} style={{ flex: 1, color: activePanel==='right'?'#0af':'#fff', background:'none', border:'none', padding: 12 }}>Suite</button>
         </div>
       )}
-  
+
       {/* LEFT PANEL */}
-      {(windowWidth >= 800 || activePanel === 'left') && (
+      {(typeof window === "undefined" || window.innerWidth >= 800 || activePanel === 'left') && (
         <div style={{
-          flex: 1,
-          padding: 20,
-          overflow: 'hidden',
-          display: windowWidth < 800 && activePanel !== 'left' ? 'none' : 'block'
+          flex: 1, padding: 20, overflow: 'hidden',
+          display: typeof window !== "undefined" && window.innerWidth < 800 ? (activePanel === 'left' ? 'block' : 'none') : 'block'
         }}>
           <div style={{ height: '100%' }}>
             <input
@@ -272,13 +256,12 @@ const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? w
           </div>
         </div>
       )}
-  
+
       {/* CENTER PANEL */}
-      {(windowWidth >= 800 || activePanel === 'center') && (
+      {(typeof window === "undefined" || window.innerWidth >= 800 || activePanel === 'center') && (
         <div style={{
-          flex: 1.1,
-          padding: 20,
-          display: windowWidth < 800 && activePanel !== 'center' ? 'none' : 'block'
+          flex: 1.1, padding: 20,
+          display: typeof window !== "undefined" && window.innerWidth < 800 ? (activePanel === 'center' ? 'block' : 'none') : 'block'
         }}>
           <Suspense fallback={<div>Loading Avatar...</div>}>
             {mode === 'focused' ? <FocusedAvatar key={avatarKey} /> : (
@@ -290,8 +273,8 @@ const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? w
             <button onClick={() => setGridMode(!gridMode)} style={{ marginLeft: 10 }}>Layout/Grid View</button>
           )}
           <AvatarClothingSelector />
-  
-          {/* AUTH PANEL */}
+
+          {/* AUTH PANEL / LOGGED IN PANEL */}
           {!user ? (
             <div style={{ background: '#181825', padding: 20, borderRadius: 12, marginTop: 20, boxShadow: '0 0 20px #0af', width: '100%', maxWidth: 360 }}>
               <h2 style={{ color: '#0af', marginBottom: 12 }}>{signupMode ? "🟢 Create Account" : "🔐 Log In"}</h2>
@@ -328,7 +311,6 @@ const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? w
               </form>
             </div>
           ) : (
-            // LOGGED IN PANEL
             <div style={{
               background: '#181825',
               padding: 24,
@@ -397,13 +379,12 @@ const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? w
           )}
         </div>
       )}
-  
+
       {/* RIGHT PANEL */}
-      {(windowWidth >= 800 || activePanel === 'right') && (
+      {(typeof window === "undefined" || window.innerWidth >= 800 || activePanel === 'right') && (
         <div style={{
-          flex: 1,
-          padding: 20,
-          display: windowWidth < 800 && activePanel !== 'right' ? 'none' : 'block'
+          flex: 1, padding: 20,
+          display: typeof window !== "undefined" && window.innerWidth < 800 ? (activePanel === 'right' ? 'block' : 'none') : 'block'
         }}>
           <h2>Company Suite</h2>
           {[
@@ -422,17 +403,13 @@ const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? w
           ))}
         </div>
       )}
-  
-      {/* THEME TOGGLE BUTTON */}
+
       <button
         onClick={() => setDarkMode(!darkMode)}
-        style={{
-          position: 'fixed', top: 10, right: 10, zIndex: 1000,
-          background: darkMode ? '#0af' : '#222', color: darkMode ? '#111' : '#fff',
-          border: 'none', borderRadius: 6, padding: '6px 12px'
-        }}
+        style={{ position: 'fixed', top: 10, right: 10, zIndex: 1000 }}
       >
         Toggle {darkMode ? 'Light' : 'Dark'} Mode
       </button>
     </div>
   )
+}
