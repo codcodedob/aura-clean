@@ -1,0 +1,39 @@
+// components/ThreeBG.tsx
+import React, { Suspense } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Environment, useGLTF } from '@react-three/drei'
+
+function Model({ modelUrl }: { modelUrl: string }) {
+  const { scene } = useGLTF(modelUrl)
+  return <primitive object={scene} dispose={null} />
+}
+
+// Don’t forget: npm install three @react-three/fiber @react-three/drei
+
+export default function ThreeBG({ modelUrl = '/xtime.glb' }: { modelUrl?: string }) {
+  return (
+    <Canvas
+      camera={{ position: [0, 0, 8], fov: 35 }}
+      style={{
+        width: '100vw',
+        height: '100vh',
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+        background: 'transparent'
+      }}
+      gl={{ preserveDrawingBuffer: true }}
+      frameloop="demand"
+    >
+      <ambientLight intensity={1.2} />
+      <directionalLight position={[10, 10, 10]} intensity={0.8} />
+      <Suspense fallback={null}>
+        <Model modelUrl={modelUrl} />
+        <Environment preset="city" />
+      </Suspense>
+      {/* Camera controls are disabled for pointerEvents: none, but you can enable for dev */}
+      {/* <OrbitControls enableZoom={false} enablePan={false} /> */}
+    </Canvas>
+  )
+}

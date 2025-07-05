@@ -1,0 +1,88 @@
+// index.tsx
+import React, { useEffect, useState, Suspense, lazy } from 'react'
+import { useRouter } from 'next/router'
+import { supabase } from '@/lib/supabaseClient'
+import AvatarClothingSelector from '@/components/AvatarClothingSelector'
+import type { User } from '@supabase/supabase-js'
+import Link from 'next/link'
+import { FixedSizeList as List } from 'react-window'
+import AutoSizer from 'react-virtualized-auto-sizer'
+
+// NEW MODALS
+import ConfirmFreeModal from '@/components/ConfirmFreeModal'
+import MultiPayModal from '@/components/MultiPayModal'
+
+const ADMIN_EMAIL = "burks.donte@gmail.com"
+
+interface Coin {
+  id: string
+  name: string
+  emoji?: string
+  price: number
+  cap: number
+  user_id: string
+  img_url?: string
+  is_featured?: boolean
+  symbol?: string
+  type?: 'stock' | 'crypto'
+}
+
+const FocusedAvatar = lazy(() => import('@/components/FocusedAvatar')) as React.LazyExoticComponent<React.ComponentType<{}>>
+const FullBodyAvatar = lazy(() => import('@/components/FullBodyAvatar')) as React.LazyExoticComponent<React.ComponentType<{ modelPaths: string[] }>>
+
+function CoinCard({ coin, amount, onAmountChange, onBuy }: {
+  coin: Coin,
+  amount: number,
+  onAmountChange: (id: string, amt: number) => void,
+  onBuy: (id: string) => void
+}) {
+  const [localAmount, setLocalAmount] = useState(amount.toFixed(2))
+  useEffect(() => { setLocalAmount(amount.toFixed(2)) }, [amount])
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setLocalAmount(val)
+    const num = parseFloat(val)
+    if (!isNaN(num)) onAmountChange(coin.id, num)
+  }
+  return (
+    <div style={{ margin: '1rem 0', padding: '1rem', borderRadius: 8, border: '1px solid #ccc', background: 'var(--card-bg)', color: 'var(--text-color)', textAlign: 'center' }}>
+      <strong style={{ fontSize: 18 }}>{coin.emoji ?? '🪙'} {coin.name}</strong>
+      <p>${coin.price.toFixed(2)} · cap {coin.cap}</p>
+      <input
+        type="number"
+        value={localAmount}
+        min={0}
+        step="0.01"
+        onChange={handleChange}
+        style={{ marginTop: 8, padding: 8, width: '80%', borderRadius: 6, border: '1px solid #ccc', background: 'var(--input-bg)', color: 'var(--text-color)' }}
+      />
+      <button onClick={() => onBuy(coin.id)} style={{ marginTop: 12, padding: '10px 18px', borderRadius: 8, background: '#2563eb', color: '#fff', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>Buy</button>
+    </div>
+  )
+}
+
+export default function Home() {
+  // STATE
+  const [hasMounted, setHasMounted] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [coins, setCoins] = useState<Coin[]>([])
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'all' | 'stock' | 'crypto'>('all')
+  const [investmentAmounts, setInvestmentAmounts] = useState<{ [key: string]: number }>({})
+  const [mode, setMode] = useState<'focused' | 'full-body'>('focused')
+  const [gridMode, setGridMode] = useState(false)
+  const [avatarKey, setAvatarKey] = useState(0)
+  const [refreshing, setRefreshing] = useState(false)
+  const [message, setMessage] = useState('')
+  const [signupMode, setSignupMode] = useState(false)
+  const [signupError, setSignupError] = useState('')
+  const router = useRouter()
+  const [activePanel, setActivePanel] = useState<'left' | 'center' | 'right'>('center')
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024)
+
+  // MODAL STATE
+  const [showFreeModal, setShowFreeModal] = useState(false)
+  const [showMultiPayModal, setShowMultiPayModal] = useState(false)
+  const [pendingCoin, setPendingCoin] = useState<Coin | null>(null)
+  const [pendingAmount, setPendingAmount] = useState(0)

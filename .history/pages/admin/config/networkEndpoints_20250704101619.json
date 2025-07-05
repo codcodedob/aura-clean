@@ -1,0 +1,13 @@
+{
+    "scanned_at": "2025-07-04T18:22:00Z",
+    "endpoints": [
+      {
+        "ip": "10.0.0.12",
+        "hostname": "server01.corp.local",
+        "open_tcp_ports": [22, 80, 443],
+        "last_seen": "2025-07-04T18:22:00Z"
+      },
+      ...
+    ]
+  }
+  

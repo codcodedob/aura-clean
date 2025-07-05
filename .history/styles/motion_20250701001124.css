@@ -1,0 +1,46 @@
+/* .motion-section {
+    /* Remove old padding and centering rules here, handled in inline style above */
+  }
+  
+  .motion-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin: 1rem 0;
+    backdrop-filter: blur(8px);
+    transition: transform 0.3s var(--motion-ease);
+    /* Remove margin:auto; if it's set here, as it's in the inline style above */
+  }
+  
+  .motion-card:hover {
+    transform: scale(1.03);
+  }
+  
+  .motion-card:hover {
+    transform: scale(1.03);
+  }
+  .hipsession-banner {
+    width: 100%;
+    overflow: hidden;
+    background: #0af2;
+    border-radius: 8px;
+    padding: 6px 0;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  
+  .hipsession-banner-inner {
+    display: inline-block;
+    white-space: nowrap;
+    animation: hipsession-scroll 9s linear infinite;
+    font-weight: bold;
+    color: #222;
+    font-size: 1rem;
+  }
+  
+  @keyframes hipsession-scroll {
+    0% { transform: translateX(100%);}
+    100% { transform: translateX(-100%);}
+  }
+   */

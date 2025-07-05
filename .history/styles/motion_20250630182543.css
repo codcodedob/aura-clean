@@ -1,0 +1,27 @@
+:root {
+    --motion-duration: 1s;
+    --motion-ease: cubic-bezier(0.77, 0, 0.175, 1);
+    --card-bg: #ffffff0f;
+    --card-border: rgba(255, 255, 255, 0.1);
+  }
+  
+  .motion-section {
+    padding: 4rem 2rem;
+    background: linear-gradient(to bottom, #0c0c0c, #1e1e1e);
+    color: white;
+  }
+  
+  .motion-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin: 1rem 0;
+    backdrop-filter: blur(8px);
+    transition: transform 0.3s var(--motion-ease);
+  }
+  
+  .motion-card:hover {
+    transform: scale(1.03);
+  }
+  
