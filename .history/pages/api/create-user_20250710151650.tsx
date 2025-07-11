@@ -1,0 +1,48 @@
+// pages/api/create-user.ts
+import { NextApiRequest, NextApiResponse } from "next";
+import Stripe from "stripe";
+import { supabaseAdmin } from "@/lib/supabaseAdminClient";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2023-10-16",
+});
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  const { email, userId } = req.body;
+  if (!email || !userId) {
+    return res.status(400).json({ error: "Missing email or userId" });
+  }
+
+  try {
+    // Create Stripe customer
+    const customer = await stripe.customers.create({
+      email,
+      metadata: { supabase_user_id: userId },
+    });
+
+    // Insert into your public.users table
+    const { error: insertError } = await supabaseAdmin
+      .from("users")
+      .insert([
+        {
+          id: userId,
+          email,
+          stripe_customer_id: customer.id,
+        },
+      ]);
+
+    if (insertError) {
+      console.error("Supabase insert error:", insertError);
+      return res.status(500).json({ error: insertError.message });
+    }
+
+    return res.status(200).json({ message: "User created successfully." });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+}
