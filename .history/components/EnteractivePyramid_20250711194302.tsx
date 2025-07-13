@@ -1,0 +1,54 @@
+"use client";
+
+import React, { useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { MeshStandardMaterial, TextureLoader, Color } from "three";
+import { useLoader } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
+
+interface Props {
+  projectScope: number | null;
+  label: string;
+  videoUrl?: string;
+}
+
+export default function EnteractivePyramid({ projectScope, label, videoUrl }: Props) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  // Rotate the pyramid slowly
+  useFrame(({ clock }) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = clock.getElapsedTime() * 0.2;
+    }
+  });
+
+  return (
+    <div style={{ width: "220px", height: "220px" }}>
+      <Canvas camera={{ position: [0, 1.5, 3] }}>
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[2, 2, 2]} />
+        <group ref={groupRef}>
+          {/* Pyramid geometry */}
+          <mesh>
+            <coneGeometry args={[1, 1.5, 4]} />
+            <meshStandardMaterial color={new Color("purple")} />
+          </mesh>
+          {/* Floating label in 3D */}
+          <Html center>
+            <div
+              style={{
+                background: "rgba(0,0,0,0.6)",
+                padding: "4px 8px",
+                borderRadius: 4,
+                fontSize: "0.8rem",
+                color: "#fff"
+              }}
+            >
+              {label} – {(projectScope ?? 0).toFixed(1)}%
+            </div>
+          </Html>
+        </group>
+      </Canvas>
+    </div>
+  );
+}

@@ -36658,7 +36658,7 @@ export default function Home() {
           </Suspense>
           <button onClick={toggleMode} style={{ marginTop: 12 }}>Toggle Fit</button>
           {mode === 'full-body' && (
-            <button onClick={() => setGridMode(!gridMode)} style={{ marginLeft: 10 }}>Layout/Grid View</button>
+            <button onClick={() => (!gridMode)} style={{ marginLeft: 10 }}>Layout/Grid View</button>
           )}
           <AvatarClothingSelector />
           {/* AUTH PANEL */}

@@ -11,12 +11,13 @@
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.7",
-    "@react-three/drei": "^10.3.0",
-    "@react-three/fiber": "^9.1.4",
+    "@react-three/drei": "^10.5.0",
+    "@react-three/fiber": "^9.2.0",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.3.1",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.50.0",
+    "csv-stringify": "^6.6.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.20.2",
     "fs": "^0.0.1-security",
@@ -43,7 +44,9 @@
     "recharts": "^2.15.4",
     "slick-carousel": "^1.8.1",
     "stripe": "^18.3.0",
+    "swiper": "^11.2.10",
     "three": "^0.177.0",
+    "three-stdlib": "^2.36.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
