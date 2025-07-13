@@ -1,3 +1,4 @@
+// pages/space.tsx
 "use client";
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -11,6 +12,13 @@ const EnteractivePyramid = dynamic(() => import("@/components/EnteractivePyramid
   ssr: false,
 });
 
+interface EnteractiveRow {
+  id: string;
+  name: string;
+  project_scope: number | null;
+  link: string | null;
+}
+
 type EnteractiveItem = {
   id: string;
   name: string;
@@ -18,11 +26,22 @@ type EnteractiveItem = {
   link: string;
 };
 
+type Activity = {
+  id: string;
+  enteractive: string;
+  status: "past" | "present" | "future";
+  detail?: string;
+  products?: string[] | string;
+  imageurl?: string;
+  created_at?: string;
+  [key: string]: unknown;
+};
+
 export default function Space() {
   const [user, setUser] = useState<User | null>(null);
   const [isExecutive, setIsExecutive] = useState(false);
   const [enteractiveData, setEnteractiveData] = useState<EnteractiveItem[]>([]);
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [search, setSearch] = useState("");
 
   const router = useRouter();
@@ -46,16 +65,21 @@ export default function Space() {
       checkIsAdmin(user.id).then(setIsExecutive);
 
       supabase
-        .from("enteractive")
-        .select("id, name, project_scope, link")
-        .then(({ data }) => {
+  .from<"enteractive", EnteractiveRow>("enteractive")
+  .select("*")
+
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("Error fetching enteractive:", error);
+            return;
+          }
           if (data) {
             setEnteractiveData(
               data.map((item) => ({
-                id: item.id,
-                name: item.name,
+                id: String(item.id),
+                name: String(item.name),
                 project_scope: Number(item.project_scope) || 0,
-                link: item.link || "",
+                link: String(item.link ?? ""),
               }))
             );
           }

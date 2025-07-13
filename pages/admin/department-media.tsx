@@ -1,33 +1,17 @@
 // pages/admin/department-media.tsx
-import React, { useEffect, useState, useRef } from "react";
-import Image from "next/image";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 const DEPARTMENTS = [
   { key: "art", label: "Art Department" },
   { key: "business", label: "Business Options" },
   { key: "agx", label: "AGX" },
-  { key: "communication", label: "Communication" }
+  { key: "communication", label: "Communication" },
 ];
 const SLOTS = [1, 2, 3, 4];
 
-type MediaEntry = {
-  id: string;
-  department: string;
-  slot: number;
-  title: string;
-  description: string | null;
-  img_url: string | null;
-  video_url: string | null;
-  link_url: string | null;
-  updated_at: string | null;
-};
-
 export default function AdminDepartmentMedia() {
-  const [media, setMedia] = useState<MediaEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [edit, setEdit] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchMedia();
@@ -35,132 +19,17 @@ export default function AdminDepartmentMedia() {
 
   async function fetchMedia() {
     setLoading(true);
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("department_media")
       .select("*")
       .order("department")
       .order("slot");
+
     if (error) {
       alert("Error loading media: " + error.message);
-      setMedia([]);
-    } else {
-      setMedia(data as MediaEntry[]);
     }
+
     setLoading(false);
-  }
-
-  async function updateField(
-    id: string,
-    field: keyof MediaEntry,
-    value: string | null
-  ) {
-    setSaving(true);
-    const { error } = await supabase
-      .from("department_media")
-      .update({ [field]: value, updated_at: new Date().toISOString() })
-      .eq("id", id);
-    if (error) {
-      alert("Save failed: " + error.message);
-    } else {
-      fetchMedia();
-      setEdit(prev => ({ ...prev, [id + '-' + field]: false }));
-    }
-    setSaving(false);
-  }
-
-  async function uploadMedia(
-    id: string,
-    field: "img_url" | "video_url",
-    file: File
-  ) {
-    setSaving(true);
-    const filePath = `media/${id}/${field}-${file.name.replace(/\s+/g, "")}`;
-    const { error: uploadError } = await supabase.storage
-      .from("public")
-      .upload(filePath, file, { upsert: true });
-    if (uploadError) {
-      alert("Upload failed: " + uploadError.message);
-      setSaving(false);
-      return;
-    }
-    const { data: urlData } = supabase.storage
-      .from("public")
-      .getPublicUrl(filePath);
-    const url = urlData.publicUrl;
-    const { error } = await supabase
-      .from("department_media")
-      .update({ [field]: url, updated_at: new Date().toISOString() })
-      .eq("id", id);
-    if (error) {
-      alert("Save failed: " + error.message);
-    } else {
-      fetchMedia();
-    }
-    setSaving(false);
-  }
-
-  function RenderUploader({
-    id,
-    field,
-    current,
-    accept
-  }: {
-    id: string;
-    field: "img_url" | "video_url";
-    current: string | null;
-    accept: string;
-  }) {
-    const inputRef = useRef<HTMLInputElement>(null);
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files?.length) uploadMedia(id, field, e.target.files[0]);
-    };
-    return (
-      <div style={{ marginBottom: 8 }}>
-        <input
-          ref={inputRef}
-          type="file"
-          accept={accept}
-          style={{ display: "none" }}
-          onChange={handleChange}
-          capture={field === "img_url" ? "environment" : undefined}
-        />
-        <button
-          onClick={() => inputRef.current?.click()}
-          style={{ marginRight: 8, fontSize: 13 }}
-        >
-          {current ? "Replace" : "Upload"}{" "}
-          {field === "img_url" ? "Image" : "Video"}
-        </button>
-        {field === "img_url" ? (
-          current && (
-            <Image
-              src={current}
-              alt="Preview"
-              width={70}
-              height={44}
-              style={{
-                objectFit: "cover",
-                borderRadius: 6,
-                border: "1px solid #ccc"
-              }}
-            />
-          )
-        ) : (
-          current && (
-            <video
-              src={current}
-              controls
-              style={{
-                width: 80,
-                height: 44,
-                objectFit: "cover",
-                borderRadius: 6
-              }}
-            />
-          )
-        )}
-      </div>
-    );
   }
 
   if (loading) return <div style={{ padding: 32 }}>Loading…</div>;
@@ -172,58 +41,32 @@ export default function AdminDepartmentMedia() {
         Update the images, videos, and text for each business suite/department
         card. Changes are live!
       </p>
-      {saving && (
-        <div style={{ color: "#36e", fontWeight: 700 }}>Saving…</div>
-      )}
 
       <div
         style={{
           display: "flex",
           gap: 30,
           flexWrap: "wrap",
-          marginTop: 26
+          marginTop: 26,
         }}
       >
-        {DEPARTMENTS.map(dept => (
-          <div
-            key={dept.key}
-            style={{ flex: "1 1 360px", minWidth: 340 }}
-          >
-            <h2 style={{ fontSize: 22, marginBottom: 14 }}>
-              {dept.label}
-            </h2>
-            {SLOTS.map(slot => {
-              const entry =
-                media.find(
-                  m => m.department === dept.key && m.slot === slot
-                ) || {
-                  id: "new",
-                  department: dept.key,
-                  slot,
-                  title: "",
-                  description: null,
-                  img_url: null,
-                  video_url: null,
-                  link_url: null,
-                  updated_at: null
-                };
-
-              return (
-                <div
-                  key={slot}
-                  style={{
-                    marginBottom: 36,
-                    padding: 16,
-                    borderRadius: 16,
-                    border: "1px solid #ccc",
-                    background: "#f8fafd"
-                  }}
-                >
-                  {/* Your editable fields remain here unchanged */}
-                  {/* For brevity, unchanged code omitted */}
-                </div>
-              );
-            })}
+        {DEPARTMENTS.map((dept) => (
+          <div key={dept.key} style={{ flex: "1 1 360px", minWidth: 340 }}>
+            <h2 style={{ fontSize: 22, marginBottom: 14 }}>{dept.label}</h2>
+            {SLOTS.map((slot) => (
+              <div
+                key={slot}
+                style={{
+                  marginBottom: 36,
+                  padding: 16,
+                  borderRadius: 16,
+                  border: "1px solid #ccc",
+                  background: "#f8fafd",
+                }}
+              >
+                {/* Add your field display or editing UI here */}
+              </div>
+            ))}
           </div>
         ))}
       </div>

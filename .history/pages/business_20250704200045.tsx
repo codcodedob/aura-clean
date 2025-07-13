@@ -1,2 +1,0 @@
-Property 'checked' does not exist on type '(EventTarget & HTMLInputElement) | (EventTarget & HTMLTextAreaElement)'.
-  Property 'checked' does not exist on type 'EventTarget & HTMLTextAreaElement'.ts(2339)

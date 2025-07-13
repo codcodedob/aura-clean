@@ -1,14 +1,16 @@
-// /components/AdminDashboard.tsx
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/router";
 
 import AdminEndpointsPanel from "@/components/AdminEndpointsPanel";
 import AdminAuditTrailPanel from "@/components/AdminAuditTrailPanel";
-import AdminSLAPanel from "@/components/AdminSLAPanel";
+//import AdminSLAPanel from "@/components/AdminSLAPanel";
 //import AdminSiteVisitsPanel from "@/components/AdminSiteVisitsPanel";
-import ActivityWidget from "@/components/ActivityWidget";
 
-import type { Ticker } from "@/pages/admin/dashboard";
+interface Ticker {
+  symbol: string;
+  name: string;
+  type: string;
+}
 
 interface AdminDashboardProps {
   tickers?: Ticker[];
@@ -16,14 +18,6 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ tickers = [] }: AdminDashboardProps) {
   const router = useRouter();
-
-  // Example activities — replace with real activity data or dynamic fetch
-  const [activities] = useState([
-    { id: "1", title: "Review SLA Compliance", status: "pending", link: "/admin/sla" },
-    { id: "2", title: "Audit Logs Update", status: "done", link: "/admin/audit" },
-    { id: "3", title: "Add New Coin to Market", status: "future", link: "/admin/coin-market" },
-    { id: "4", title: "Check Network Endpoints", status: "pending", link: "/admin/endpoints" },
-  ]);
 
   return (
     <div style={{ padding: 32, background: "#101827", minHeight: "100vh", color: "#fff" }}>
@@ -47,7 +41,7 @@ export default function AdminDashboard({ tickers = [] }: AdminDashboardProps) {
           { label: "Audit Trail", href: "/admin/audit" },
           { label: "SLA Compliance", href: "/admin/sla" },
           { label: "Video Settings", href: "/admin/video" },
-          { label: "Site Visits", href: "/admin/site-visits" }, // optional page route
+          { label: "Site Visits", href: "/admin/site-visits" },
         ].map(({ label, href }) => (
           <button
             key={href}
@@ -108,12 +102,12 @@ export default function AdminDashboard({ tickers = [] }: AdminDashboardProps) {
       {/* Panels Section */}
       <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
         <div>
-          <AdminSLAPanel />
+         
           <div style={{ marginTop: 32 }}>
             <AdminEndpointsPanel />
           </div>
           <div style={{ marginTop: 32 }}>
-           
+            {/* Reserved for future panel */}
           </div>
         </div>
 
@@ -122,9 +116,6 @@ export default function AdminDashboard({ tickers = [] }: AdminDashboardProps) {
           {/* Other panels (like video settings, fam awards, coin market) could be rendered here or linked from nav */}
         </div>
       </section>
-
-      {/* Activity Widget */}
-      
     </div>
   );
 }

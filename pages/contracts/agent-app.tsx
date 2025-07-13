@@ -31,22 +31,26 @@ export default function AgentAppContract() {
   ]
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-    const { name, value, type, checked } = e.target
+    const { name, value, type } = e.target;
+
     if (type === "checkbox") {
+      const target = e.target as HTMLInputElement;
+      const { checked } = target;
+
       setForm(f =>
         checked
           ? { ...f, features: [...f.features, value] }
           : { ...f, features: f.features.filter(feat => feat !== value) }
-      )
+      );
     } else {
-      setForm(f => ({ ...f, [name]: value }))
+      setForm(f => ({ ...f, [name]: value }));
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
     // TODO: send to Supabase/Firebase/db
-    setSubmitted(true)
+    setSubmitted(true);
   }
 
   if (submitted) {
@@ -55,7 +59,7 @@ export default function AgentAppContract() {
         <h2>Thank you! 🙌</h2>
         <p>Your request is in the queue.<br />Please check your inbox and contracts panel for your custom quote soon.</p>
       </div>
-    )
+    );
   }
 
   return (

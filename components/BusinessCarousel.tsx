@@ -1,17 +1,17 @@
-//import { MediaItem } from "@/types/supabase";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import { Database } from "@/types/supabase";
+import type { Database } from "@/types/supabase";
 
+// Define MediaItem type from your supabase DB types
 type MediaItem = Database["public"]["Tables"]["department_media"]["Row"];
 
 type BusinessCarouselProps = {
-  media: MediaItem[];
-  department: string;
-  aiPick?: boolean; // optional flag
+  media: MediaItem[];        // array of media items
+  department: string;        // department name string
+  aiPick?: boolean;          // optional flag for any special logic you want
 };
 
 export default function BusinessCarousel({ media, department }: BusinessCarouselProps) {

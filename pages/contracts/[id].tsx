@@ -1,7 +1,7 @@
 // pages/contracts/[id].tsx
 
 import React, { useState } from 'react'
-import { useRouter } from 'next/router'
+//import { useRouter } from 'next/router'
 import Link from 'next/link'
 
 const MOCK_CONTRACT = {
@@ -29,7 +29,7 @@ const statusEmoji = {
 }
 
 export default function ContractDetailPage() {
-  const router = useRouter()
+  //const router = useRouter()
   // Removed unused `id`
 
   const [contract, setContract] = useState(MOCK_CONTRACT)

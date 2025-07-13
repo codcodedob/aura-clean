@@ -2,17 +2,11 @@
 
 import { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
-import  { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2025-06-30.basil", // Use the latest stable
 });
-
-interface UserProfile {
-  id: string;
-  stripe_customer_id: string | null;
-  email: string | null;
-}
 
 export default async function handler(
   req: NextApiRequest,
@@ -44,9 +38,9 @@ export default async function handler(
       .json({ error: "Minimum amount must be at least $0.50 USD." });
   }
 
-  // Fetch user from Supabase
+  // Fetch user from Supabase WITHOUT generics
   const { data: userProfile, error: userError } = await supabase
-    .from<UserProfile>("users")
+    .from("users")
     .select("id, stripe_customer_id, email")
     .eq("id", userId)
     .single();
@@ -72,7 +66,7 @@ export default async function handler(
     });
     stripeCustomerId = customer.id;
 
-    // Optionally save the new customer ID to Supabase
+    // Save the new customer ID to Supabase
     await supabase
       .from("users")
       .update({ stripe_customer_id: stripeCustomerId })
@@ -85,7 +79,7 @@ export default async function handler(
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      customer: stripeCustomerId, // undefined if still no email
+      customer: stripeCustomerId, // undefined if no email
       customer_email: stripeCustomerId ? undefined : userProfile.email ?? undefined,
       line_items: [
         {
@@ -121,4 +115,3 @@ export default async function handler(
       .json({ error: "Failed to create Stripe checkout session." });
   }
 }
-export {};

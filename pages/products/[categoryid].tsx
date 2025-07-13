@@ -1,6 +1,6 @@
-// pages/products/[categoryid].tsx
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabaseClient';
 
 interface Product {
@@ -25,7 +25,7 @@ export default function ProductsByCategory() {
     async function fetchProducts() {
       setLoading(true);
       const { data, error } = await supabase
-        .from<Product>('products')
+        .from('products')
         .select('*')
         .eq('category', categoryid);
 
@@ -62,13 +62,15 @@ export default function ProductsByCategory() {
               }}
             >
               {prod.image_url && (
-                <img
-                  src={prod.image_url}
-                  alt={prod.name}
-                  width={100}
-                  height={100}
-                  style={{ objectFit: 'cover' }}
-                />
+                <div style={{ position: 'relative', width: 100, height: 100, flexShrink: 0 }}>
+                  <Image
+                    src={prod.image_url}
+                    alt={prod.name}
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    sizes="100px"
+                  />
+                </div>
               )}
               <div>
                 <strong>{prod.name}</strong>

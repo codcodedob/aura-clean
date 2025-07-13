@@ -1,7 +1,7 @@
 // components/ThreeBG.tsx
 import React, { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment, useGLTF } from '@react-three/drei'
+import {  Environment, useGLTF } from '@react-three/drei'
 
 function Model({ modelUrl }: { modelUrl: string }) {
   const { scene } = useGLTF(modelUrl)

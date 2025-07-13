@@ -11,7 +11,7 @@ import BusinessCarousel from "@/components/BusinessCarousel";
 //import { Info } from "lucide-react";
 import GravityScene from "@/components/GravityScene";
 import { toast } from "react-hot-toast";
-import React, { useState, useEffect, lazy } from "react";
+import React, { useState, useEffect } from "react";
  
 
 
@@ -21,6 +21,7 @@ interface Coin {
   id: string;
   name: string;
   emoji?: string;
+
   price: number;
   cap: number;
   user_id: string;
@@ -30,7 +31,8 @@ interface Coin {
   type?: "stock" | "crypto";
 }
 
-const FocusedAvatar = lazy(() => import("@/components/FocusedAvatar")) as React.LazyExoticComponent<React.ComponentType<{}>>;
+//const FocusedAvatar = lazy(() => import("@/components/FocusedAvatar")) as React.LazyExoticComponent<React.ComponentType<Record<string, never>>>;
+
 //const FullBodyAvatar = lazy(() => import("@/components/FullBodyAvatar")) as React.LazyExoticComponent<React.ComponentType<{ modelPaths: string[] }>>;
 
 function CoinCard({ coin, amount, onAmountChange, onBuy }: {
@@ -140,18 +142,18 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "stock" | "crypto">("all");
   const [investmentAmounts, setInvestmentAmounts] = useState<{ [key: string]: number }>({});
-  const [mode, setMode] = useState<"focused" | "full-body">("focused");
-  const [gridMode, setGridMode] = useState(false);
-  const [avatarKey, setAvatarKey] = useState(0);
+  //const [mode, setMode] = useState<"focused" | "full-body">("focused");
+  //const [gridMode, setGridMode] = useState(false);
+  //const [avatarKey, setAvatarKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [message, setMessage] = useState("");
-  const [signupMode, setSignupMode] = useState(false);
-  const [signupError, setSignupError] = useState("");
+  //const [signupMode, setSignupMode] = useState(false);
+  //const [signupError, setSignupError] = useState("");
   const [activePanel, setActivePanel] = useState<"left" | "center" | "right">("center");
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
-  const [hoveredDept, setHoveredDept] = useState<string | null>(null);
+  //const [hoveredDept, setHoveredDept] = useState<string | null>(null);
 
-const [selectedDept, setSelectedDept] = useState<string | null>(null);
+//const [selectedDept, setSelectedDept] = useState<string | null>(null);
 
   const [sceneMode, setSceneMode] = useState<"cart" | "closet">("cart");
   const router = useRouter();
@@ -164,13 +166,13 @@ const [selectedDept, setSelectedDept] = useState<string | null>(null);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const fullBodyModels = [
-    "/models/F1VISIONBALNCICHROME.glb",
-    "/models/top.glb",
-    "/models/bottom.glb",
-    "/models/base-inner.glb",
-    "/models/base-outer.glb",
-  ];
+  // const fullBodyModels = [
+  //   "/models/F1VISIONBALNCICHROME.glb",
+  //   "/models/top.glb",
+  //   "/models/bottom.glb",
+  //   "/models/base-inner.glb",
+  //   "/models/base-outer.glb",
+  // ];
 
   const refreshMarketData = async () => {
     setRefreshing(true);
@@ -214,7 +216,21 @@ const [selectedDept, setSelectedDept] = useState<string | null>(null);
   }, []);
   
   
-  const [departmentMedia, setDepartmentMedia] = useState<any[]>([]);
+  interface DepartmentMediaItem {
+    id: string;
+    department: string;
+    description: string | null;
+    img_url: string | null;
+    link_url: string | null;
+    slot: number;
+    title: string;
+    updated_at: string | null;
+    video_url: string | null;
+    launch_date?: string;
+  }
+  
+  const [departmentMedia, setDepartmentMedia] = useState<DepartmentMediaItem[]>([]);
+  
   useEffect(() => {
     const fetchMedia = async () => {
       const { data, error } = await supabase
@@ -288,10 +304,10 @@ const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const othersCoins = filteredCoins.filter((c) => c.user_id !== user?.id);
   const featuredCoin = filteredCoins.find((c) => c.is_featured);
 
-  const toggleMode = () => {
-    setMode((prev) => (prev === "focused" ? "full-body" : "focused"));
-    setAvatarKey((prev) => prev + 1);
-  };
+  // const toggleMode = () => {
+  //   setMode((prev) => (prev === "focused" ? "full-body" : "focused"));
+  //   setAvatarKey((prev) => prev + 1);
+  // };
 
   if (!hasMounted) return null;
 
@@ -553,7 +569,7 @@ const [selectedDept, setSelectedDept] = useState<string | null>(null);
             >
               {/* SIGNUP/LOGIN FORM WOULD GO HERE */}
               {/* I assume you had more code after this in your original */}
-              <p>{/* AUTH PANEL */}
+              <div>{/* AUTH PANEL */}
 {!user ? (
   <div
     style={{
@@ -640,7 +656,7 @@ const [selectedDept, setSelectedDept] = useState<string | null>(null);
           if (!email) return;
           const password = prompt("Enter password:");
           if (!password) return;
-          const { data, error } = await supabase.auth.signUp({ email, password });
+          const {  error } = await supabase.auth.signUp({ email, password });
           if (error) {
             alert(error.message);
           } else {
@@ -664,7 +680,7 @@ const [selectedDept, setSelectedDept] = useState<string | null>(null);
     {/* Show user info */}
   </>
 )}
-</p>
+</div>
             </div>
           ) : (
             <>

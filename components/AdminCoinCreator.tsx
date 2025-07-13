@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { Database } from "@/types/supabase"
 
 export default function AdminCoinCreator() {
   const [name, setName] = useState('')
@@ -13,31 +14,55 @@ export default function AdminCoinCreator() {
     e.preventDefault()
     setStatus('⏳ Inserting...')
 
-    const parsedCap = cap.trim() !== '' ? parseFloat(cap) : undefined
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-    const { error } = await supabase.from('aura_coins').insert([
-      {
-        name,
-        emoji,
-        cap: parsedCap,
-        type,
-        symbol
-      }
-    ])
+    if (userError || !user) {
+      console.error("Error getting user:", userError)
+      setStatus("❌ No logged-in user.")
+      return
+    }
+
+    const parsedCap = cap.trim() !== '' ? parseFloat(cap) : null
+
+    const insertData: Database["public"]["Tables"]["aura_coins"]["Insert"] = {
+      name,
+      user_id: user.id,
+      emoji: emoji || null,
+      cap: parsedCap ?? 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      active: true,
+      dividend_eligible: false,
+      earnings_model: null,
+      img_Url: null,
+      is_featured: false,
+      owner_name: null,
+      price: 1.0,
+      projected_cap: null,
+      rarity: "common",
+      scope: [],
+      symbol: symbol || null,
+      tagline: "",
+      type: type || null,
+      visible: true,
+      vision: null,
+    }
+
+    const { error } = await supabase.from("aura_coins").insert([insertData])
 
     if (error) {
       console.error(error)
-      setStatus('❌ Failed to insert coin.')
+      setStatus("❌ Failed to insert coin.")
     } else {
-      setStatus('✅ Coin inserted successfully!')
-      setName('')
-      setEmoji('')
-      setCap('')
-      setType('')
-      setSymbol('')
+      setStatus("✅ Coin inserted successfully!")
+      setName("")
+      setEmoji("")
+      setCap("")
+      setType("")
+      setSymbol("")
     }
 
-    setTimeout(() => setStatus(''), 4000)
+    setTimeout(() => setStatus(""), 4000)
   }
 
   const isSaving = status === '⏳ Inserting...'

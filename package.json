@@ -17,6 +17,7 @@
     "@stripe/stripe-js": "^7.3.1",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.50.0",
+    "@turf/turf": "^7.2.0",
     "csv-stringify": "^6.6.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.20.2",
@@ -52,6 +53,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/google-map-react": "^2.1.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

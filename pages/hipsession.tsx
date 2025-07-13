@@ -1,7 +1,7 @@
 // pages/hipsession.tsx
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/router';
+import Link from 'next/link';
 import Image from 'next/image';
 
 interface CategoryDB {
@@ -13,7 +13,9 @@ interface CategoryDB {
   image_url: string | null;
   timestamp: string;
   aspect_ratio: number | null;
+  [key: string]: unknown; // Add this line
 }
+
 
 interface Category {
   id: string;
@@ -28,39 +30,46 @@ interface Category {
 
 const PAGE_SIZE = 10;
 
-// Convert snake_case keys to camelCase keys
 function toCamelCase(s: string): string {
   return s.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
-function mapKeysToCamel<T>(obj: Record<string, any>): T {
-  const newObj: Record<string, any> = {};
+function mapKeysToCamel<T>(obj: Record<string, unknown>): T {
+  const newObj: Record<string, unknown> = {};
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
       const camelKey = toCamelCase(key);
       const value = obj[key];
-      newObj[camelKey] = (value && typeof value === 'object' && !Array.isArray(value))
-        ? mapKeysToCamel(value)
-        : value;
+      if (
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+      ) {
+        newObj[camelKey] = mapKeysToCamel(value as Record<string, unknown>);
+      } else {
+        newObj[camelKey] = value;
+      }
     }
   }
   return newObj as T;
 }
 
 export default function HipSession() {
-  const router = useRouter();
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-
   const [previewCategory, setPreviewCategory] = useState<Category | null>(null);
 
-  // Fetch total count for pagination
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm.trim()), 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
   useEffect(() => {
     async function fetchCount() {
       const { count, error } = await supabase
@@ -76,40 +85,39 @@ export default function HipSession() {
     fetchCount();
   }, []);
 
-  // Fetch categories based on page and sort order
   useEffect(() => {
     async function fetchCategories() {
       setLoading(true);
       const { data, error } = await supabase
-        .from<CategoryDB>('categories')
-        .select('*')
+        .from('categories')
+        .select('*') // no generic here
         .order('timestamp', { ascending: sortOrder === 'asc' })
         .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
       setLoading(false);
-
+    
       if (error) {
         console.error('Error loading categories:', error.message);
         setCategories([]);
         setFilteredCategories([]);
         setPreviewCategory(null);
       } else if (data) {
-        // Map snake_case DB keys to camelCase frontend keys
-        const mapped = data.map(item => mapKeysToCamel<Category>(item));
+        const typedData = data as CategoryDB[];
+        const mapped = typedData.map(item => mapKeysToCamel<Category>(item));
         setCategories(mapped);
         setFilteredCategories(mapped);
         setPreviewCategory(mapped[0] ?? null);
       }
     }
+    
     fetchCategories();
   }, [page, sortOrder]);
 
-  // Filter categories by search term
   useEffect(() => {
-    if (!searchTerm.trim()) {
+    if (!debouncedSearchTerm) {
       setFilteredCategories(categories);
       setPreviewCategory(categories[0] ?? null);
     } else {
-      const lowerSearch = searchTerm.toLowerCase();
+      const lowerSearch = debouncedSearchTerm.toLowerCase();
       const filtered = categories.filter(
         (cat) =>
           cat.name.toLowerCase().includes(lowerSearch) ||
@@ -118,15 +126,24 @@ export default function HipSession() {
       setFilteredCategories(filtered);
       setPreviewCategory(filtered[0] ?? null);
     }
-  }, [searchTerm, categories]);
+  }, [debouncedSearchTerm, categories]);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLLIElement>,
+    cat: Category
+  ) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      window.location.href = `/products/${cat.id}`;
+    }
+  };
 
   return (
     <div style={{ padding: '1rem', maxWidth: 700, margin: 'auto' }}>
       <h1>Categories</h1>
 
-      {/* Preview video or image */}
       {previewCategory ? (
         <div
           style={{
@@ -141,9 +158,9 @@ export default function HipSession() {
             background: '#000',
           }}
         >
-          {previewCategory.videoUrl ? (
+          {previewCategory.videoUrl?.length ? (
             <video
-              key={previewCategory.id} // remount on change
+              key={previewCategory.id}
               src={previewCategory.videoUrl}
               autoPlay
               muted
@@ -156,7 +173,7 @@ export default function HipSession() {
                 backgroundColor: '#000',
               }}
             />
-          ) : previewCategory.imageUrl ? (
+          ) : previewCategory.imageUrl?.length ? (
             <Image
               src={previewCategory.imageUrl}
               alt={previewCategory.name}
@@ -211,54 +228,57 @@ export default function HipSession() {
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {filteredCategories.map((cat) => (
-            <li
-              key={cat.id}
-              onClick={() => router.push(`/products/${cat.id}`)}
-              onMouseEnter={() => setPreviewCategory(cat)}
-              onMouseLeave={() =>
-                setPreviewCategory(filteredCategories[0] ?? null)
-              }
-              style={{
-                borderBottom: '1px solid #ddd',
-                padding: '0.5rem 0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                cursor: 'pointer',
-                userSelect: 'none',
-                transition: 'background-color 0.2s',
-              }}
-              onMouseOver={(e) =>
-                (e.currentTarget.style.backgroundColor = '#f0f0f0')
-              }
-              onMouseOut={(e) =>
-                (e.currentTarget.style.backgroundColor = 'transparent')
-              }
-            >
-              {cat.imageUrl && (
-                <Image
-                  src={cat.imageUrl}
-                  alt={cat.name}
-                  width={50}
-                  height={50}
-                  style={{ objectFit: 'cover', borderRadius: 4 }}
-                />
-              )}
-              <div>
-                <strong>{cat.name}</strong>
-                <div style={{ fontSize: '0.85rem', color: '#555' }}>
-                  Issue: {cat.issue || 'N/A'}
+            <Link key={cat.id} href={`/products/${cat.id}`} passHref legacyBehavior>
+              <li
+                tabIndex={0}
+                onMouseEnter={() => setPreviewCategory(cat)}
+                onMouseLeave={() =>
+                  setPreviewCategory(filteredCategories[0] ?? null)
+                }
+                onKeyDown={(e) => handleKeyDown(e, cat)}
+                style={{
+                  borderBottom: '1px solid #ddd',
+                  padding: '0.5rem 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseOver={(e) =>
+                  (e.currentTarget.style.backgroundColor = '#f0f0f0')
+                }
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.backgroundColor = 'transparent')
+                }
+                role="link"
+                aria-label={`View products in category ${cat.name}`}
+              >
+                {cat.imageUrl && (
+                  <Image
+                    src={cat.imageUrl}
+                    alt={cat.name}
+                    width={50}
+                    height={50}
+                    style={{ objectFit: 'cover', borderRadius: 4 }}
+                  />
+                )}
+                <div>
+                  <strong>{cat.name}</strong>
+                  <div style={{ fontSize: '0.85rem', color: '#555' }}>
+                    Issue: {cat.issue || 'N/A'}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#888' }}>
+                    {new Date(cat.timestamp).toLocaleDateString()}
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#888' }}>
-                  {new Date(cat.timestamp).toLocaleDateString()}
-                </div>
-              </div>
-            </li>
+              </li>
+            </Link>
           ))}
         </ul>
       )}
 
-      {/* Pagination */}
       <div
         style={{
           marginTop: '1rem',

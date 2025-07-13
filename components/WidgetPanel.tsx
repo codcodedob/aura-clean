@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 
-export default function WidgetPanel({ cartItems = [], nowPlaying, alerts = [], unreadMessages = 0 }) {
+export default function WidgetPanel({ cartItems = [],  alerts = [], unreadMessages = 0 }) {
   return (
     <div style={{
       position: 'fixed',
@@ -12,12 +12,12 @@ export default function WidgetPanel({ cartItems = [], nowPlaying, alerts = [], u
       padding: 18, display: 'flex', flexDirection: 'column', gap: 18
     }}>
       {/* Now Playing (music/video/announcement) */}
-      {nowPlaying && (
+      {/* {nowPlaying && (
         <div>
           <b>Now Playing:</b> {nowPlaying.title}
           <audio src={nowPlaying.audioUrl} controls style={{ width: '100%' }} />
         </div>
-      )}
+      )} */}
 
       {/* Cart quick view */}
       <div>

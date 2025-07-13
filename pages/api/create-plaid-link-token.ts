@@ -1,8 +1,10 @@
 // pages/api/create-plaid-link-token.ts
+
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Configuration, PlaidApi, PlaidEnvironments, Products, CountryCode } from 'plaid'
+import type { AxiosError } from 'axios'
 
-const PLAID_ENV = process.env.PLAID_ENVIRONMENT || 'sandbox'  // e.g. 'sandbox', 'development', 'production'
+const PLAID_ENV = process.env.PLAID_ENVIRONMENT || 'sandbox'  // 'sandbox', 'development', 'production'
 
 const config = new Configuration({
   basePath: PlaidEnvironments[PLAID_ENV],
@@ -49,9 +51,14 @@ export default async function handler(
 
     const { link_token, expiration } = createResponse.data
     return res.status(200).json({ link_token, expiration })
-  } catch (error: any) {
-    console.error('Plaid linkTokenCreate error:', error)
-    const errMsg = error.response?.data ?? error.message
-    return res.status(500).json({ error: String(errMsg) })
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as AxiosError
+      console.error('Plaid linkTokenCreate error:', axiosError)
+      const errMsg = axiosError.response?.data ?? axiosError.message
+      return res.status(500).json({ error: String(errMsg) })
+    }
+    console.error('Unexpected error:', error)
+    return res.status(500).json({ error: 'An unexpected error occurred' })
   }
 }

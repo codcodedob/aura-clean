@@ -26,9 +26,9 @@ export default function AdminVideoSettings() {
     const file = acceptedFiles[0];
     const filePath = `videos/${Date.now()}-${file.name}`;
     // 1. Upload to Supabase storage (make sure you have a 'videos' bucket!)
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('videos')
-      .upload(filePath, file, { upsert: true });
+    const { error: uploadError } = await supabase.storage
+  .from('videos')
+  .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
       alert(`Upload failed: ${uploadError.message}`);

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Image from "next/image";
 
 // Define the type for your payment method
 type PaymentMethod = {
@@ -91,10 +92,12 @@ export default function MultiPayModal({
                 cursor: "pointer",
               }}
             >
-              <img
+              <Image
                 src={method.img || "/placeholder.png"}
                 alt={method.name}
-                style={{ width: 60, height: 60, marginBottom: 8 }}
+                width={60}
+                height={60}
+                style={{ marginBottom: 8 }}
               />
               <div>{method.name}</div>
             </button>
@@ -119,14 +122,12 @@ export default function MultiPayModal({
         {selected && selected.img && (
           <div style={{ marginTop: 30 }}>
             <h3>{selected.name} QR Code</h3>
-            <img
+            <Image
               src={selected.img}
               alt={`${selected.name} QR`}
-              style={{
-                width: 200,
-                height: 200,
-                margin: "10px auto",
-              }}
+              width={200}
+              height={200}
+              style={{ margin: "10px auto" }}
             />
             <p style={{ fontSize: 13, color: "#333" }}>
               Scan QR with your app to pay
