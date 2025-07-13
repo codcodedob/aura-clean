@@ -748,14 +748,9 @@ export default function Home() {
 >
   {/* Business Carousel */}
   <BusinessCarousel
-  department="Art"
-  aiPick
-  launchDate="2025-12-31"
-  media={departmentMedia.filter(
-    (m) => m.department?.toLowerCase() === "entertainment"
-  )}
+  department="ART"
+  media={departmentMedia.filter(m => m.department?.toLowerCase() === "art")}
 />
-
 
 
   {/* Countdown Cards */}
@@ -866,14 +861,12 @@ export default function Home() {
         Featured Art
       </h3>
       <BusinessCarousel
-  department="Art"
-  aiPick
-  
-  media={departmentMedia.filter(
-    (m) => m.department?.toLowerCase() === "entertainment"
-  )}
-/>
-
+        department="Art"
+        aiPick
+        media={departmentMedia.filter(
+          (m) => m.department?.toLowerCase() === "entertainment"
+        )}
+      />
       <button
         onClick={() => router.push("/business/art")}
         style={{

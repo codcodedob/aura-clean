@@ -868,7 +868,7 @@ export default function Home() {
       <BusinessCarousel
   department="Art"
   aiPick
-  
+  launchDate="2025-12-31"
   media={departmentMedia.filter(
     (m) => m.department?.toLowerCase() === "entertainment"
   )}

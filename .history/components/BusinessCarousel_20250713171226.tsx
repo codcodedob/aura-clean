@@ -11,8 +11,7 @@ type MediaItem = Database["public"]["Tables"]["department_media"]["Row"];
 type BusinessCarouselProps = {
   media: MediaItem[];        // array of media items
   department: string;        // department name string
-  aiPick?: boolean;   
-  launchDate?: string;       // optional flag for any special logic you want
+  aiPick?: boolean;          // optional flag for any special logic you want
 };
 
 export default function BusinessCarousel({ media, department }: BusinessCarouselProps) {
