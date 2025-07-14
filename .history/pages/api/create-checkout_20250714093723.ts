@@ -5,7 +5,7 @@ import Stripe from "stripe";
 import { supabase } from "@/lib/supabaseClient";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2022-11-15", // Safe, stable version
+  apiVersion: "2023-10-16", // Use the stable API version
 });
 
 export default async function handler(
@@ -38,20 +38,12 @@ export default async function handler(
       .json({ error: "Minimum amount must be at least $0.50 USD." });
   }
 
-  // ✅ Fix: Break type inference loop
-  const { data, error } = await supabase
-    .from("users")
-    .select("id, stripe_customer_id, email")
+  // Fetch user from Supabase
+  const { data: userProfile, error: userError } = await supabase
+    .from("profiles") // Make sure this matches your actual table name
+    .select("id,stripe_customer_id,email")
     .eq("id", userId)
     .single();
-
-  const userProfile = data as {
-    id: string;
-    email: string | null;
-    stripe_customer_id: string | null;
-  };
-
-  const userError = error;
 
   console.log("🔍 Supabase user lookup:");
   console.log("🔸 userProfile:", userProfile);
@@ -65,7 +57,6 @@ export default async function handler(
 
   let stripeCustomerId = userProfile.stripe_customer_id || undefined;
 
-  // Create a new Stripe customer if none exists
   if (!stripeCustomerId && userProfile.email) {
     console.log("✨ Creating new Stripe customer...");
     const customer = await stripe.customers.create({
@@ -74,9 +65,8 @@ export default async function handler(
     });
     stripeCustomerId = customer.id;
 
-    // Save the new customer ID to Supabase
     await supabase
-      .from("users")
+      .from("profiles")
       .update({ stripe_customer_id: stripeCustomerId })
       .eq("id", userProfile.id);
   }
@@ -121,8 +111,6 @@ export default async function handler(
     console.log("🔐 Stripe key present?", !!process.env.STRIPE_SECRET_KEY);
     console.log("💰 Request body:", req.body);
 
-    return res
-      .status(500)
-      .json({ error: "Failed to create Stripe checkout session." });
+    return res.status(500).json({ error: "Failed to create Stripe checkout session." });
   }
 }

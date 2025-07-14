@@ -1,11 +1,18 @@
 // File: pages/api/create-checkout.ts
 
-import { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 import { supabase } from "@/lib/supabaseClient";
 
+// Define the shape of the users table row you are selecting
+type UserProfile = {
+  id: string;
+  email: string | null;
+  stripe_customer_id: string | null;
+};
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2022-11-15", // Safe, stable version
+  apiVersion: "2025-06-30.basil",
 });
 
 export default async function handler(
@@ -38,20 +45,18 @@ export default async function handler(
       .json({ error: "Minimum amount must be at least $0.50 USD." });
   }
 
-  // ✅ Fix: Break type inference loop
-  const { data, error } = await supabase
+  // Explicit typing here avoids TypeScript infinite inference
+  const {
+    data: userProfile,
+    error: userError,
+  }: {
+    data: UserProfile | null;
+    error: any;
+  } = await supabase
     .from("users")
     .select("id, stripe_customer_id, email")
     .eq("id", userId)
     .single();
-
-  const userProfile = data as {
-    id: string;
-    email: string | null;
-    stripe_customer_id: string | null;
-  };
-
-  const userError = error;
 
   console.log("🔍 Supabase user lookup:");
   console.log("🔸 userProfile:", userProfile);
@@ -87,7 +92,7 @@ export default async function handler(
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      customer: stripeCustomerId,
+      customer: stripeCustomerId, // undefined if no email
       customer_email: stripeCustomerId ? undefined : userProfile.email ?? undefined,
       line_items: [
         {
@@ -96,7 +101,7 @@ export default async function handler(
             product_data: {
               name: `Purchase of ${coinId}`,
             },
-            unit_amount: Math.round(amount * 100),
+            unit_amount: Math.round(amount * 100), // Stripe expects cents
           },
           quantity: 1,
         },
