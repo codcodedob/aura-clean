@@ -7,20 +7,12 @@ import * as THREE from "three";
 
 type Model = {
   name: string;
-  url: string; // now always defined
+  url?: string;
   [key: string]: unknown;
 };
 
-const modelBase = "/models/";
-
-const getModelUrl = (name: string) => {
-  if (name.toLowerCase().endsWith(".glb")) {
-    return modelBase + encodeURIComponent(name);
-  }
-  return modelBase + encodeURIComponent(name + ".glb");
-};
-
 export default function GravityScene({
+  //mode = "closet",
   filter,
 }: {
   mode?: "cart" | "closet";
@@ -32,21 +24,12 @@ export default function GravityScene({
   useEffect(() => {
     fetch("/api/models")
       .then((res) => res.json())
-      .then((data) =>
-        setModels(
-          data.models.map((m: { name: string }) => ({
-            ...m,
-            url: getModelUrl(m.name),
-          }))
-        )
-      )
+      .then((data) => setModels(data.models))
       .catch((err) => console.error("Error fetching models:", err));
   }, []);
 
-  const mainModelName = "xtime.glb";
-  const mainModelUrl = getModelUrl(mainModelName);
-
-  let itemModels = models.filter((model) => model.name !== mainModelName);
+  const mainModel = "xtime.glb";
+  let itemModels = models.filter((model) => model.name !== mainModel);
   if (filter) itemModels = itemModels.filter((model) => filter(model.name));
 
   useEffect(() => {
@@ -59,8 +42,7 @@ export default function GravityScene({
     return () => window.removeEventListener("mousemove", handleMove);
   }, []);
 
-  if (!models.length)
-    return <div style={{ height: 440 }}>Loading 3D...</div>;
+  if (!models.length) return <div style={{ height: 440 }}>Loading 3D...</div>;
 
   return (
     <div
@@ -76,17 +58,8 @@ export default function GravityScene({
       <Canvas camera={{ position: [0, 3.2, 8], fov: 44 }}>
         <ambientLight intensity={0.67} />
         <pointLight position={[0, 5, 7]} intensity={1.1} castShadow />
-        <MagneticGroup
-          mainModel={mainModelUrl}
-          itemModels={itemModels}
-          mouse={mouse}
-        />
-        <OrbitControls
-          enableZoom
-          enablePan={false}
-          minPolarAngle={0.95}
-          maxPolarAngle={2.45}
-        />
+        <MagneticGroup mainModel={mainModel} itemModels={itemModels} mouse={mouse} />
+        <OrbitControls enableZoom enablePan={false} minPolarAngle={0.95} maxPolarAngle={2.45} />
       </Canvas>
     </div>
   );
