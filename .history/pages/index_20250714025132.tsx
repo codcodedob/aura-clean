@@ -317,11 +317,13 @@ export default function Home() {
   return (
     <div style={{
       display: windowWidth < 800 ? "block" : "flex",
-      height: "100vh",
+      height: windowWidth < 800 ? "auto" : "100vh",
       flexDirection: windowWidth < 800 ? "column" : "row",
       background: "linear-gradient(120deg, #181825 40%, #111827 100%)",
-      color: "var(--text-color)"
+      color: "var(--text-color)",
+      overflowY: windowWidth < 800 ? "auto" : "hidden"
     }}>
+    
       {/* MOBILE TAB BAR */}
       {windowWidth < 800 && (
         <div style={{
@@ -382,117 +384,123 @@ export default function Home() {
         </div>
       )}
 
-{(windowWidth >= 800 || activePanel === "left") && (
-  <div
-    style={{
-      flex: 1,
-      padding: 24,
-      overflowY: "auto", // ✅ fixed scroll
-      display: windowWidth < 800 && activePanel !== "left" ? "none" : "block",
-      background: "rgba(24,24,37,0.98)",
-      borderRight: "1.5px solid #222c",
-    }}
-  >
-    <h2 style={{ fontWeight: 700, fontSize: 26, marginBottom: 16 }}>
-      All Coins
-    </h2>
-    <input
-      type="search"
-      placeholder="Search coins..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      style={{
-        width: "100%",
-        padding: 10,
-        marginBottom: 12,
-        borderRadius: 10,
-        border: "1.5px solid #444",
-        background: "var(--input-bg)",
-        color: "var(--text-color)",
-        fontSize: 16,
-        outline: "none",
-      }}
-    />
-    <div style={{ marginBottom: 12 }}>
-      <button
-        onClick={() => setFilter("all")}
-        style={{
-          marginRight: 6,
-          padding: "6px 12px",
-          borderRadius: 8,
-          background: filter === "all" ? "#0af" : "transparent",
-          color: filter === "all" ? "#fff" : "var(--text-color)",
-          border: "1.5px solid #0af",
-          cursor: "pointer",
-        }}
-      >
-        All
-      </button>
-      <button
-        onClick={() => setFilter("stock")}
-        style={{
-          marginRight: 6,
-          padding: "6px 12px",
-          borderRadius: 8,
-          background: filter === "stock" ? "#0af" : "transparent",
-          color: filter === "stock" ? "#fff" : "var(--text-color)",
-          border: "1.5px solid #0af",
-          cursor: "pointer",
-        }}
-      >
-        Stocks
-      </button>
-      <button
-        onClick={() => setFilter("crypto")}
-        style={{
-          padding: "6px 12px",
-          borderRadius: 8,
-          background: filter === "crypto" ? "#0af" : "transparent",
-          color: filter === "crypto" ? "#fff" : "var(--text-color)",
-          border: "1.5px solid #0af",
-          cursor: "pointer",
-        }}
-      >
-        Crypto
-      </button>
-    </div>
-
-    {refreshing && <p>Refreshing market data...</p>}
-    {message && <p>{message}</p>}
-    {user?.email === ADMIN_EMAIL && (
-      <button
-        onClick={refreshMarketData}
-        disabled={refreshing}
-        style={{
-          marginTop: 12,
-          padding: "10px 16px",
-          borderRadius: 12,
-          background: "#0a0",
-          color: "#fff",
-          cursor: refreshing ? "not-allowed" : "pointer",
-          border: "none",
-          fontWeight: "700",
-        }}
-      >
-        Refresh Market Data
-      </button>
-    )}
-
-    <div>
-      {othersCoins.map((coin) => (
-        <CoinCard
-          key={coin.id}
-          coin={coin}
-          amount={investmentAmounts[coin.id] ?? coin.price}
-          onAmountChange={(id, amt) =>
-            setInvestmentAmounts((prev) => ({ ...prev, [id]: amt }))
-          }
-          onBuy={handleBuy}
-        />
-      ))}
-    </div>
-  </div>
-)}
+      {/* LEFT PANEL */}
+      {(windowWidth >= 800 || activePanel === "left") && (
+        <div style={{
+          flex: 1,
+          padding: 24,
+          overflow: "hidden",
+          display: windowWidth < 800 && activePanel !== "left" ? "none" : "block",
+          background: "rgba(24,24,37,0.98)",
+          borderRight: "1.5px solid #222c"
+        }}>
+          <div style={{ height: "100%" }}>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search coins"
+              style={{
+                padding: 14,
+                borderRadius: 8,
+                width: "100%",
+                marginBottom: 16,
+                border: "1.5px solid #222",
+                background: "#232a39",
+                color: "#fff",
+                fontSize: 16,
+                fontWeight: "600",
+                outline: "none",
+                userSelect: "text"
+              }}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <div style={{ marginBottom: 16, userSelect: "none" }}>
+              <button
+                onClick={() => setFilter("all")}
+                style={{
+                  marginRight: 10,
+                  color: filter === "all" ? "#0af" : "#888",
+                  fontWeight: filter === "all" ? "700" : "500",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 15,
+                  padding: "6px 14px",
+                  borderRadius: 8,
+                  userSelect: "none",
+                }}
+                aria-pressed={filter === "all"}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setFilter("stock")}
+                style={{
+                  marginRight: 10,
+                  color: filter === "stock" ? "#0af" : "#888",
+                  fontWeight: filter === "stock" ? "700" : "500",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 15,
+                  padding: "6px 14px",
+                  borderRadius: 8,
+                  userSelect: "none",
+                }}
+                aria-pressed={filter === "stock"}
+              >
+                Stocks
+              </button>
+              <button
+                onClick={() => setFilter("crypto")}
+                style={{
+                  color: filter === "crypto" ? "#0af" : "#888",
+                  fontWeight: filter === "crypto" ? "700" : "500",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 15,
+                  padding: "6px 14px",
+                  borderRadius: 8,
+                  userSelect: "none",
+                }}
+                aria-pressed={filter === "crypto"}
+              >
+                Crypto
+              </button>
+            </div>
+            <AutoSizer>            
+              {({ height, width }: { height: number; width: number }) => (
+                <List
+                  height={height}
+                  itemCount={othersCoins.length + (featuredCoin ? 1 : 0)}
+                  itemSize={210}
+                  width={width}
+                >
+                  {({ index, style }) => {
+                    const coin =
+                      index === 0 && featuredCoin
+                        ? featuredCoin
+                        : othersCoins[index - (featuredCoin ? 1 : 0)];
+                    return (
+                      <div style={style} key={coin.id}>
+                        <CoinCard
+                          coin={coin}
+                          amount={investmentAmounts[coin.id] || coin.price}
+                          onAmountChange={(id, amt) => setInvestmentAmounts((prev) => ({ ...prev, [id]: amt }))}
+                          onBuy={handleBuy}
+                        />
+                      </div>
+                    );
+                  }}
+                </List>
+              )}
+            </AutoSizer>
+          </div>
+        </div>
+      )}
 
       {/* CENTER PANEL */}
       {(windowWidth >= 800 || activePanel === "center") && (
@@ -543,7 +551,7 @@ export default function Home() {
               userSelect: "none"
             }}
           >
-           
+            
           </div>
 
           <AvatarClothingSelector />

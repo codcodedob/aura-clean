@@ -10,12 +10,10 @@ function Model({ modelUrl }: { modelUrl: string }) {
 
 // Don’t forget: npm install three @react-three/fiber @react-three/drei
 
-export default function ThreeBG({ modelUrl = 'xtime.glb' }: { modelUrl?: string }) {
+export default function ThreeBG({ modelUrl = '/xtime.glb' }: { modelUrl?: string }) {
   return (
-  
     <Canvas
       camera={{ position: [0, 0, 8], fov: 35 }}
-   
       style={{
         width: '100vw',
         height: '100vh',
@@ -36,7 +34,6 @@ export default function ThreeBG({ modelUrl = 'xtime.glb' }: { modelUrl?: string 
       </Suspense>
       {/* Camera controls are disabled for pointerEvents: none, but you can enable for dev */}
       {/* <OrbitControls enableZoom={false} enablePan={false} /> */}
-    </Canvas> 
-    
+    </Canvas>
   )
 }
