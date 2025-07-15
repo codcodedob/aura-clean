@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         emoji,
         price,
         cap,
-        img_Url 
+        img_Url as img_url
       `)
       .order('price', { ascending: false })
       .range(offset, offset + limit - 1)

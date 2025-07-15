@@ -30,7 +30,7 @@ const businessOptions: BusinessOption[] = [
     features: ["No cost", "Instant setup", "Onboarding contract"],
     button: "Create Coin",
     formFields: [
-      { name: "name", label: "Coin Name", type: "text", required: true },
+      { name: "coinName", label: "Coin Name", type: "text", required: true },
       { name: "coinDividends", label: "Eligible for Dividends", type: "checkbox" },
     ],
   },
@@ -111,8 +111,8 @@ export default function Business() {
           .from("aura_coins")
           .insert({
             owner_name: user.email,
-            name: formState.name,
-            symbol: formState.name?.slice(0, 8)?.toUpperCase() || "COIN",
+            name: formState.coinName,
+            symbol: formState.coinName?.slice(0, 8)?.toUpperCase() || "COIN",
             scope: formState.scope ?? [],
             dividend_eligible: !!formState.coinDividends,
             user_id: user.id,
@@ -141,6 +141,7 @@ export default function Business() {
         });
 
         alert("Artist Coin and onboarding contract created!");
+
         setModalInfo(null);
         router.push("/dobemosaic");
       } else if (modalInfo) {
@@ -386,6 +387,7 @@ export default function Business() {
                 )}
               </div>
             ))}
+
             {modalInfo.key === "artist-coin" && (
               <div style={{ marginBottom: 20 }}>
                 <label

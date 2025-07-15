@@ -28,7 +28,7 @@ interface Coin {
   price: number;
   cap: number;
   user_id: string;
-  img_Url?: string;
+  img_url?: string;
   is_featured?: boolean;
   symbol?: string;
   type?: "stock" | "crypto";
@@ -77,28 +77,9 @@ function CoinCard({ coin, amount, onAmountChange, onBuy }: {
       justifyContent: 'space-between',
       userSelect: 'none'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-  {coin.img_Url ? (
-    <img
-      src={coin.img_Url}
-      alt={coin.name}
-      style={{
-        width: 48,
-        height: 48,
-        objectFit: 'cover',
-        borderRadius: 6,
-      }}
-    />
-  ) : (
-    <span style={{ fontSize: 24 }}>
-      {coin.emoji ?? '🪙'}
-    </span>
-  )}
-  <strong style={{ fontSize: 22, userSelect: 'text' }}>
-    {coin.name}
-  </strong>
-</div>
-
+      <strong style={{ fontSize: 22, marginBottom: 6, userSelect: 'text' }}>
+        {coin.emoji ?? "🪙"} {coin.name}
+      </strong>
       <p style={{ opacity: 0.85, margin: "4px 0 12px 0", userSelect: 'text' }}>
         ${coin.price.toFixed(2)} · cap {coin.cap.toLocaleString()}
       </p>
@@ -227,40 +208,22 @@ export default function Home() {
     fetch("/api/coins")
       .then((res) => res.json())
       .then((data) => {
-        if (!Array.isArray(data)) {
-          console.error("API /api/coins did not return an array:", data);
-          setCoins([]);
-          return;
-        }
-  
-        const transformed = data.map((c: any) => ({
-          ...c,
-          img_url: c.img_Url, // remap to camelCase
-        }));
-  
-        setCoins(transformed);
-  
+        setCoins(data || []);
+        // 👇 set default amounts
         const initialAmounts: { [key: string]: number } = {};
-        for (const coin of transformed) {
+        for (const coin of data || []) {
           initialAmounts[coin.id] = coin.price;
         }
         setInvestmentAmounts(initialAmounts);
-      })
-      .catch((err) => {
-        console.error("Error fetching coins:", err);
-        setCoins([]);
       });
   }, []);
-  
-  
-  
   
   
   interface DepartmentMediaItem {
     id: string;
     department: string;
     description: string | null;
-    img_Url: string | null;
+    img_url: string | null;
     link_url: string | null;
     slot: number;
     title: string;
@@ -954,9 +917,9 @@ export default function Home() {
                 padding: 16
               }}
             >
-              {m.img_Url && (
+              {m.img_url && (
                 <img
-                  src={m.img_Url}
+                  src={m.img_url}
                   style={{
                     width: "100%",
                     borderRadius: 8,

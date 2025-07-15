@@ -28,7 +28,7 @@ interface Coin {
   price: number;
   cap: number;
   user_id: string;
-  img_Url?: string;
+  img_url?: string;
   is_featured?: boolean;
   symbol?: string;
   type?: "stock" | "crypto";
@@ -78,9 +78,9 @@ function CoinCard({ coin, amount, onAmountChange, onBuy }: {
       userSelect: 'none'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-  {coin.img_Url ? (
+  {coin.img_url ? (
     <img
-      src={coin.img_Url}
+      src={coin.img_url}
       alt={coin.name}
       style={{
         width: 48,
@@ -227,31 +227,21 @@ export default function Home() {
     fetch("/api/coins")
       .then((res) => res.json())
       .then((data) => {
-        if (!Array.isArray(data)) {
-          console.error("API /api/coins did not return an array:", data);
-          setCoins([]);
-          return;
-        }
-  
-        const transformed = data.map((c: any) => ({
-          ...c,
-          img_url: c.img_Url, // remap to camelCase
-        }));
-  
-        setCoins(transformed);
+        console.log("Coins API response:", data);
+        const coinsArray = Array.isArray(data) ? data : [];
+        setCoins(coinsArray);
   
         const initialAmounts: { [key: string]: number } = {};
-        for (const coin of transformed) {
+        for (const coin of coinsArray) {
           initialAmounts[coin.id] = coin.price;
         }
         setInvestmentAmounts(initialAmounts);
       })
       .catch((err) => {
-        console.error("Error fetching coins:", err);
+        console.error("Failed to load coins:", err);
         setCoins([]);
       });
   }, []);
-  
   
   
   
@@ -260,7 +250,7 @@ export default function Home() {
     id: string;
     department: string;
     description: string | null;
-    img_Url: string | null;
+    img_url: string | null;
     link_url: string | null;
     slot: number;
     title: string;
@@ -954,9 +944,9 @@ export default function Home() {
                 padding: 16
               }}
             >
-              {m.img_Url && (
+              {m.img_url && (
                 <img
-                  src={m.img_Url}
+                  src={m.img_url}
                   style={{
                     width: "100%",
                     borderRadius: 8,

@@ -41,57 +41,52 @@ export default function CoinCard({
   return (
     <div
       style={{
-        width: 300,
-        height: 400,
+        position: "relative",
+        margin: "1rem 0",
         borderRadius: 12,
-        border: "1.5px solid rgba(34,44,58,0.8)",
+        border: "1.5px solid rgba(34, 44, 58, 0.8)",
         overflow: "hidden",
-        boxShadow: "0 3px 18px rgba(10,243,255,0.2)",
+        color: "var(--text-color)",
+        textAlign: "center",
+        boxShadow: "0 3px 18px rgba(10, 243, 255, 0.2)",
+        minHeight: 250,
+        userSelect: "none",
+        background: coin.img_Url
+          ? `url(${coin.img_Url}) center / cover no-repeat`
+          : "var(--card-bg)",
         display: "flex",
         flexDirection: "column",
-        userSelect: "none",
+        justifyContent: "flex-end",
       }}
     >
-      {/* Top Image / Emoji */}
-      <div
-        style={{
-          flex: 4,
-          position: "relative",
-          background: coin.img_Url
-            ? `url(${coin.img_Url}) center/cover no-repeat`
-            : "#333",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {!coin.img_Url && (
-          <div
-            style={{
-              fontSize: 64,
-              color: "white",
-            }}
-          >
-            {coin.emoji ?? "🪙"}
-          </div>
-        )}
-      </div>
+      {!coin.img_Url && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 64,
+            background: "#333",
+          }}
+        >
+          {coin.emoji ?? "🪙"}
+        </div>
+      )}
 
-      {/* Bottom Content */}
       <div
         style={{
-          flex: 1,
-          background: "rgba(0,0,0,0.75)",
-          color: "var(--text-color)",
-          padding: "0.75rem",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
+          position: "relative",
+          background: "rgba(0,0,0,0.6)",
+          padding: "1rem",
         }}
       >
-        <strong>{coin.name}</strong>
-        <p style={{ opacity: 0.85, margin: "4px 0" }}>
+        <strong style={{ fontSize: 20 }}>{coin.name}</strong>
+        <p style={{ opacity: 0.85, margin: "4px 0 12px 0" }}>
           ${coin.price.toFixed(2)} · cap {coin.cap.toLocaleString()}
         </p>
         <input
@@ -102,13 +97,14 @@ export default function CoinCard({
           onChange={handleChange}
           style={{
             marginTop: 4,
-            padding: "8px 12px",
+            padding: "10px 14px",
             width: "85%",
+            maxWidth: 280,
             borderRadius: 8,
             border: "1.5px solid #222c",
             background: "var(--input-bg)",
             color: "var(--text-color)",
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: 600,
             textAlign: "center",
           }}
@@ -116,15 +112,16 @@ export default function CoinCard({
         <button
           onClick={() => onBuy(coin.id)}
           style={{
-            marginTop: 6,
-            padding: "8px 16px",
-            borderRadius: 8,
+            marginTop: 14,
+            padding: "12px 22px",
+            borderRadius: 14,
             background: "#2563eb",
             color: "#fff",
             fontWeight: "700",
-            fontSize: 14,
+            fontSize: 16,
             border: "none",
             cursor: "pointer",
+            boxShadow: "0 0 10px #2563ebaa",
           }}
         >
           Buy

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import LogoRotator from "@/components/LogoRotator";
 import { getOrCreateUserCoin } from "@/utils/getOrCreateUserCoin";
-import { useRouter } from "next/router";
 
 const ADMIN_EMAIL = "";
 
@@ -30,8 +29,10 @@ const businessOptions: BusinessOption[] = [
     features: ["No cost", "Instant setup", "Onboarding contract"],
     button: "Create Coin",
     formFields: [
-      { name: "name", label: "Coin Name", type: "text", required: true },
+      { name: "coinName", label: "Coin Name", type: "text", required: true },
+      { name: "coinScope", label: "Scope", type: "text", required: true },
       { name: "coinDividends", label: "Eligible for Dividends", type: "checkbox" },
+      { name: "coinProjects", label: "Projects (comma separated)", type: "text" },
     ],
   },
   {
@@ -64,31 +65,20 @@ export default function Business() {
   const [user, setUser] = useState<any>(undefined);
   const [modalInfo, setModalInfo] = useState<BusinessOption | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cart, setCart] = useState<string[]>([]);
   const [formState, setFormState] = useState<Record<string, any>>({});
-  const [enteractives, setEnteractives] = useState<string[]>([]);
-  const router = useRouter();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data?.user ?? null));
-
-    supabase
-      .from("enteractives")
-      .select("name")
-      .then(({ data }) => {
-        if (data) {
-          setEnteractives(data.map((x) => x.name));
-        }
-      });
   }, []);
 
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const target = e.target as HTMLInputElement;
-    const { name, value, type } = target;
+    const { name, value, type, checked } = e.target;
     setFormState((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? target.checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -111,16 +101,16 @@ export default function Business() {
           .from("aura_coins")
           .insert({
             owner_name: user.email,
-            name: formState.name,
-            symbol: formState.name?.slice(0, 8)?.toUpperCase() || "COIN",
-            scope: formState.scope ?? [],
-            dividend_eligible: !!formState.coinDividends,
+            coinName: formState.coinName,
+            symbol: formState.coinName?.slice(0, 8)?.toUpperCase() || "COIN",
+            scopes: [formState.coinScope],
+            dividends_eligible: !!formState.coinDividends,
+            projects: formState.coinProjects?.split(",").map((s: string) => s.trim()),
             user_id: user.id,
             active: false,
           })
           .select()
           .single();
-
         if (error) throw error;
 
         await supabase.from("activities").insert({
@@ -131,7 +121,6 @@ export default function Business() {
           status: "present",
           created_at: new Date().toISOString(),
         });
-
         await supabase.from("contracts").insert({
           parties: [user.id, ADMIN_EMAIL],
           type: "artist-coin",
@@ -139,10 +128,8 @@ export default function Business() {
           start: new Date().toISOString(),
           details: JSON.stringify({ coin_id: coin.id }),
         });
-
         alert("Artist Coin and onboarding contract created!");
         setModalInfo(null);
-        router.push("/dobemosaic");
       } else if (modalInfo) {
         const coinId = await getOrCreateUserCoin(user);
 
@@ -166,9 +153,9 @@ export default function Business() {
         });
         const json = await res.json();
         if (json.sessionId) {
-          const stripe = await (
-            await import("@stripe/stripe-js")
-          ).loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+          const stripe = await (await import("@stripe/stripe-js")).loadStripe(
+            process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+          );
           await stripe?.redirectToCheckout({ sessionId: json.sessionId });
         } else {
           alert(json.error || "Failed to start payment. Try again.");
@@ -386,67 +373,6 @@ export default function Business() {
                 )}
               </div>
             ))}
-            {modalInfo.key === "artist-coin" && (
-              <div style={{ marginBottom: 20 }}>
-                <label
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 16,
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  Enteractive Scope
-                  <span
-                    title="Choose your enteractive scope. Enteractives are categories of creative spaces within Future Archives Modern. Later you can choose from the active menu to pinpoint what you're into as a professional creator. The more actives within your scope, the more actives you are creating in, the more potential your coin has to gain value. The better those actives perform, the better dividends for you and your co-investor community."
-                    style={{
-                      color: "#0af",
-                      marginLeft: 6,
-                      cursor: "help",
-                      fontSize: 20,
-                    }}
-                  >
-                    ⓘ
-                  </span>
-                </label>
-                <p style={{ fontSize: 14, color: "#aaa", marginTop: -10, marginBottom: 10 }}>
-                  Select one or more categories relevant to your creative work.
-                </p>
-                <div
-                  style={{
-                    maxHeight: 160,
-                    overflowY: "auto",
-                    border: "1px solid #555",
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                  }}
-                >
-                  {enteractives.map((name) => (
-                    <label key={name} style={{ display: "block", marginBottom: 4 }}>
-                      <input
-                        type="checkbox"
-                        value={name}
-                        checked={formState.scope?.includes(name) || false}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setFormState((prev) => {
-                            const current = prev.scope || [];
-                            return {
-                              ...prev,
-                              scope: checked
-                                ? [...current, name]
-                                : current.filter((x: string) => x !== name),
-                            };
-                          });
-                        }}
-                      />{" "}
-                      {name}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div style={{ marginTop: 28, display: "flex", gap: 14 }}>
               <button
                 type="submit"

@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { createClient } from '@supabase/supabase-js'
 
+// ✅ Use the SERVICE ROLE KEY in API routes
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
@@ -18,14 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { data, error } = await supabase
       .from('aura_coins')
-      .select(`
-        id,
-        name,
-        emoji,
-        price,
-        cap,
-        img_Url 
-      `)
+      .select('*')
       .order('price', { ascending: false })
       .range(offset, offset + limit - 1)
 

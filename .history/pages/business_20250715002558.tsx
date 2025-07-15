@@ -30,8 +30,10 @@ const businessOptions: BusinessOption[] = [
     features: ["No cost", "Instant setup", "Onboarding contract"],
     button: "Create Coin",
     formFields: [
-      { name: "name", label: "Coin Name", type: "text", required: true },
+      { name: "coinName", label: "Coin Name", type: "text", required: true },
+      { name: "coinScope", label: "Scope", type: "text", required: true },
       { name: "coinDividends", label: "Eligible for Dividends", type: "checkbox" },
+      // Removed projects because not in schema
     ],
   },
   {
@@ -65,26 +67,16 @@ export default function Business() {
   const [modalInfo, setModalInfo] = useState<BusinessOption | null>(null);
   const [loading, setLoading] = useState(false);
   const [formState, setFormState] = useState<Record<string, any>>({});
-  const [enteractives, setEnteractives] = useState<string[]>([]);
   const router = useRouter();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data?.user ?? null));
-
-    supabase
-      .from("enteractives")
-      .select("name")
-      .then(({ data }) => {
-        if (data) {
-          setEnteractives(data.map((x) => x.name));
-        }
-      });
   }, []);
 
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const target = e.target as HTMLInputElement;
+    const target = e.target as HTMLInputElement; // cast to input to access checked safely
     const { name, value, type } = target;
     setFormState((prev) => ({
       ...prev,
@@ -111,9 +103,9 @@ export default function Business() {
           .from("aura_coins")
           .insert({
             owner_name: user.email,
-            name: formState.name,
-            symbol: formState.name?.slice(0, 8)?.toUpperCase() || "COIN",
-            scope: formState.scope ?? [],
+            name: formState.coinName,
+            symbol: formState.coinName?.slice(0, 8)?.toUpperCase() || "COIN",
+            scope: formState.coinScope,
             dividend_eligible: !!formState.coinDividends,
             user_id: user.id,
             active: false,
@@ -141,8 +133,11 @@ export default function Business() {
         });
 
         alert("Artist Coin and onboarding contract created!");
+
         setModalInfo(null);
-        router.push("/dobemosaic");
+
+        router.push("/dobemosaic"); // redirect after successful coin creation
+
       } else if (modalInfo) {
         const coinId = await getOrCreateUserCoin(user);
 
@@ -182,11 +177,20 @@ export default function Business() {
   };
 
   if (user === undefined) {
-    return <div style={{ padding: 36, textAlign: "center" }}>Loading...</div>;
+    return (
+      <div style={{ padding: 36, textAlign: "center" }}>Loading...</div>
+    );
   }
   if (!user) {
     return (
-      <div style={{ padding: 36, textAlign: "center", maxWidth: 420, margin: "0 auto" }}>
+      <div
+        style={{
+          padding: 36,
+          textAlign: "center",
+          maxWidth: 420,
+          margin: "0 auto",
+        }}
+      >
         <h2>Sign In Required</h2>
         <p>You must be signed in to use business onboarding.</p>
         <a href="/login">
@@ -235,7 +239,14 @@ export default function Business() {
       <h1 style={{ fontSize: 36, fontWeight: 700, margin: "28px 0 12px 0" }}>
         Business Solutions
       </h1>
-      <p style={{ fontSize: 18, marginBottom: 38, textAlign: "center", maxWidth: 680 }}>
+      <p
+        style={{
+          fontSize: 18,
+          marginBottom: 38,
+          textAlign: "center",
+          maxWidth: 680,
+        }}
+      >
         Pick the option that fits your vision. Fast onboarding, real payments.
       </p>
       <div
@@ -386,67 +397,6 @@ export default function Business() {
                 )}
               </div>
             ))}
-            {modalInfo.key === "artist-coin" && (
-              <div style={{ marginBottom: 20 }}>
-                <label
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 16,
-                    display: "block",
-                    marginBottom: 6,
-                  }}
-                >
-                  Enteractive Scope
-                  <span
-                    title="Choose your enteractive scope. Enteractives are categories of creative spaces within Future Archives Modern. Later you can choose from the active menu to pinpoint what you're into as a professional creator. The more actives within your scope, the more actives you are creating in, the more potential your coin has to gain value. The better those actives perform, the better dividends for you and your co-investor community."
-                    style={{
-                      color: "#0af",
-                      marginLeft: 6,
-                      cursor: "help",
-                      fontSize: 20,
-                    }}
-                  >
-                    ⓘ
-                  </span>
-                </label>
-                <p style={{ fontSize: 14, color: "#aaa", marginTop: -10, marginBottom: 10 }}>
-                  Select one or more categories relevant to your creative work.
-                </p>
-                <div
-                  style={{
-                    maxHeight: 160,
-                    overflowY: "auto",
-                    border: "1px solid #555",
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                  }}
-                >
-                  {enteractives.map((name) => (
-                    <label key={name} style={{ display: "block", marginBottom: 4 }}>
-                      <input
-                        type="checkbox"
-                        value={name}
-                        checked={formState.scope?.includes(name) || false}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setFormState((prev) => {
-                            const current = prev.scope || [];
-                            return {
-                              ...prev,
-                              scope: checked
-                                ? [...current, name]
-                                : current.filter((x: string) => x !== name),
-                            };
-                          });
-                        }}
-                      />{" "}
-                      {name}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div style={{ marginTop: 28, display: "flex", gap: 14 }}>
               <button
                 type="submit"
