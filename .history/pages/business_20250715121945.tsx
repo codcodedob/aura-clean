@@ -74,20 +74,17 @@ export default function Business(): React.JSX.Element {
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth
-      .getUser()
-      .then(({ data }: { data: { user: User | null } | null }) => setUser(data?.user ?? null));
-  
+    supabase.auth.getUser().then(({ data }: { data: { user: User | null } }) => setUser(data?.user ?? null));
+
     supabase
       .from<{ name: string }>("enteractives")
       .select("name")
-      .then(({ data }: { data: { name: string }[] | null }) => {
+      .then(({ data }) => {
         if (data) {
-          setEnteractives(data.map((x: { name: string }) => x.name));
+          setEnteractives(data.map((x) => x.name));
         }
       });
   }, []);
-  
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ): void => {

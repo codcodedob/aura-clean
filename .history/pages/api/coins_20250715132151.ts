@@ -30,17 +30,14 @@ export default async function handler(
 
   try {
     const { data, error } = await supabase
-    .from("aura_coins")
-    .select("*") // just a string with column names or '*'
-    .order("price", { ascending: false })
-    .range(offset, offset + limit - 1);
-  
-  if (error) throw new Error(error.message);
-  
-  const coins = data as Coin[];
-  
-  res.status(200).json(coins);
-  
+      .from("aura_coins")
+      .select<Coin>("*")  // ✅ TypeScript will see Coin here
+      .order("price", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw new Error(error.message);
+
+    res.status(200).json(data);
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : "Unknown error";
     console.error("❌ API /coins error:", errorMessage);
