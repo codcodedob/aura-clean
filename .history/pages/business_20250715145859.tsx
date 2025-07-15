@@ -78,15 +78,14 @@ export default function Business(): React.JSX.Element {
       .getUser()
       .then(({ data }) => setUser(data?.user ?? null));
   
-      supabase
-  .from("enteractives")
-  .select("name")
+    supabase
+      .from("enteractives")
+      .select<{ name: string }>("name")
       .then(({ data }) => {
         if (data) {
           setEnteractives(data.map((x) => x.name));
         }
       });
-    
   }, []);
   
 
