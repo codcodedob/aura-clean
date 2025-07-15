@@ -2,10 +2,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Configuration, PlaidApi, PlaidEnvironments, Products, CountryCode } from 'plaid'
-import type { AxiosError } from 'axios/index';
-
-
-
+import type { AxiosError } from 'axios'
 
 const PLAID_ENV = process.env.PLAID_ENVIRONMENT || 'sandbox'  // 'sandbox', 'development', 'production'
 
