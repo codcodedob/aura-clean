@@ -29,13 +29,12 @@ export default function AvatarClothingSelector() {
 
   return (
     <div style={{ width: '100%', maxWidth: 800, height: 600, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {/* <Canvas camera={{ position: [0, 1.5, 3] }}>
-  <ambientLight intensity={0.6} />
-  <directionalLight position={[0, 10, 5]} intensity={1} />
-  <OrbitControls enableZoom={false} />
-  <Avatar modelPath={AVATAR_MODELS[selectedClothing]} />
-</Canvas> */}
-
+      <Canvas camera={{ position: [0, 1.5, 3] }}>
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[0, 10, 5]} intensity={1} />
+        <OrbitControls enableZoom={false} />
+        <Avatar modelPath={AVATAR_MODELS[selectedClothing]} />
+      </Canvas>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16, gap: 12 }}>
         {CLOTHING_OPTIONS.map(option => (

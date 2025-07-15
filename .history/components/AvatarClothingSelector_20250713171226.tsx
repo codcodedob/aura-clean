@@ -20,22 +20,28 @@ const AVATAR_THUMBS: Record<typeof CLOTHING_OPTIONS[number], string> = {
 
 function Avatar({ modelPath }: { modelPath: string }) {
   const { scene } = useGLTF(modelPath)
-  return null // disabled for now
-}
+  const avatarRef = useRef<THREE.Object3D>(null)
 
+  useFrame(() => {
+    if (avatarRef.current) {
+      avatarRef.current.rotation.y += 0.002
+    }
+  })
+
+  return <primitive ref={avatarRef} object={scene} scale={1.2} position={[0, -1.5, 0]} />
+}
 
 export default function AvatarClothingSelector() {
   const [selectedClothing, setSelectedClothing] = useState<typeof CLOTHING_OPTIONS[number]>('Default')
 
   return (
     <div style={{ width: '100%', maxWidth: 800, height: 600, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {/* <Canvas camera={{ position: [0, 1.5, 3] }}>
-  <ambientLight intensity={0.6} />
-  <directionalLight position={[0, 10, 5]} intensity={1} />
-  <OrbitControls enableZoom={false} />
-  <Avatar modelPath={AVATAR_MODELS[selectedClothing]} />
-</Canvas> */}
-
+      <Canvas camera={{ position: [0, 1.5, 3] }}>
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[0, 10, 5]} intensity={1} />
+        <OrbitControls enableZoom={false} />
+        <Avatar modelPath={AVATAR_MODELS[selectedClothing]} />
+      </Canvas>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16, gap: 12 }}>
         {CLOTHING_OPTIONS.map(option => (
