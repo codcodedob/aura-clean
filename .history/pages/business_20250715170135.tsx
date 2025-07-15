@@ -206,7 +206,7 @@ export default function Business(): React.JSX.Element {
       >
         <h2>Sign In Required</h2>
         <p>You must be signed in to use business onboarding.</p>
-        <a href="/">
+        <a href="/index">
           <button
             style={{
               padding: "12px 26px",
