@@ -925,12 +925,9 @@ export default function Home() {
   department="Art"
   aiPick
   launchDate='de'
-  media={departmentMedia
-    .filter((m) => m.department?.toLowerCase() === "entertainment")
-    .map((m) => ({
-      ...m,
-      img_url: m.img_Url ?? null, // map to lowercase
-    }))}
+  media={departmentMedia.filter(
+    (m) => m.department?.toLowerCase() === "entertainment"
+  )}
 />
 
       <button

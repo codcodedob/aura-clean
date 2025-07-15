@@ -253,7 +253,7 @@ export default function Home() {
         const transformed = data.map((c: Coin) => ({
 
           ...c,
-          img_Url: c.img_Url, // remap to camelCase
+          img_url: c.img_Url, // remap to camelCase
         }));
   
         setCoins(transformed);
@@ -804,12 +804,9 @@ export default function Home() {
   department="Art"
   aiPick
   launchDate="2025-12-31"
-  media={departmentMedia
-    .filter((m) => m.department?.toLowerCase() === "entertainment")
-    .map((m) => ({
-      ...m,
-      img_url: m.img_Url ?? null, // map to lowercase
-    }))}
+  media={departmentMedia.filter(
+    (m) => m.department?.toLowerCase() === "entertainment"
+  )}
 />
 
 
@@ -925,12 +922,9 @@ export default function Home() {
   department="Art"
   aiPick
   launchDate='de'
-  media={departmentMedia
-    .filter((m) => m.department?.toLowerCase() === "entertainment")
-    .map((m) => ({
-      ...m,
-      img_url: m.img_Url ?? null, // map to lowercase
-    }))}
+  media={departmentMedia.filter(
+    (m) => m.department?.toLowerCase() === "entertainment"
+  )}
 />
 
       <button
