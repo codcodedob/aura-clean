@@ -40,7 +40,7 @@ export default function CoinCard({
         waveColor: "#aaa",
         progressColor: "#2563eb",
         height: 64,
-        
+        responsive: true,
         barWidth: 2,
       });
 

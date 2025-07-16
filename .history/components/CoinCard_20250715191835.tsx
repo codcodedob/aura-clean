@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
-import WaveSurfer from "wavesurfer.js";
+import React, { useEffect, useState } from "react";
 
 interface Coin {
   id: string;
@@ -8,7 +7,6 @@ interface Coin {
   price: number;
   cap: number;
   img_Url?: string;
-  audio_Url?: string; // for the song
 }
 
 export default function CoinCard({
@@ -24,41 +22,10 @@ export default function CoinCard({
 }) {
   const [localAmount, setLocalAmount] = useState(amount.toFixed(2));
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
-  const waveformRef = useRef<HTMLDivElement | null>(null);
-  const wavesurferRef = useRef<WaveSurfer | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     setLocalAmount(amount.toFixed(2));
   }, [amount]);
-
-  useEffect(() => {
-    if (coin.audio_Url && waveformRef.current) {
-      // Create WaveSurfer instance
-      wavesurferRef.current = WaveSurfer.create({
-        container: waveformRef.current,
-        waveColor: "#aaa",
-        progressColor: "#2563eb",
-        height: 64,
-        
-        barWidth: 2,
-      });
-
-      wavesurferRef.current.load(coin.audio_Url);
-
-      // Cleanup
-      return () => {
-        wavesurferRef.current?.destroy();
-      };
-    }
-  }, [coin.audio_Url]);
-
-  const togglePlayback = () => {
-    if (wavesurferRef.current) {
-      wavesurferRef.current.playPause();
-      setIsPlaying(!isPlaying);
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -78,12 +45,13 @@ export default function CoinCard({
         overflow: "hidden",
         boxShadow: "0 4px 18px rgba(0,0,0,0.3)",
         margin: "1rem 0",
+        width: "100%",
         background: "#1e1e1e",
         display: "flex",
         flexDirection: "column",
       }}
     >
-      {/* Image */}
+      {/* Top visual */}
       <div
         style={{
           width: "100%",
@@ -112,34 +80,7 @@ export default function CoinCard({
         )}
       </div>
 
-      {/* Waveform */}
-      {coin.audio_Url && (
-        <div
-          style={{
-            background: "#000",
-            padding: "8px 12px",
-          }}
-        >
-          <div ref={waveformRef} />
-          <button
-            onClick={togglePlayback}
-            style={{
-              marginTop: 6,
-              padding: "6px 12px",
-              borderRadius: 6,
-              background: "#2563eb",
-              color: "#fff",
-              border: "none",
-              fontSize: 14,
-              cursor: "pointer",
-            }}
-          >
-            {isPlaying ? "Pause" : "Play"}
-          </button>
-        </div>
-      )}
-
-      {/* Bottom Info */}
+      {/* Bottom info */}
       <div
         style={{
           background: "rgba(0,0,0,0.8)",
@@ -186,7 +127,7 @@ export default function CoinCard({
               cursor: "pointer",
             }}
           >
-            Buy
+            Pre-Order
           </button>
         </div>
       </div>
