@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         prompt,
         n: 1,
         size: "512x512",
-        model: "dall-e-2",
+        model: "dall-e-3",
       }),
     });
 
