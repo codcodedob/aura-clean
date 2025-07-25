@@ -209,7 +209,7 @@ export default function Home() {
   //   "/models/base-inner.glb",
   //   "/models/base-outer.glb",
   // ];
-  <HoverGuideHUD isSignedIn={!!user} />
+
   const refreshMarketData = async () => {
     setRefreshing(true);
     setMessage("Refreshing market data...");
@@ -307,7 +307,7 @@ export default function Home() {
     fetchMedia();
   }, []);
   
-  <HoverGuideHUD isSignedIn={!!user} />
+  
   const handleBuy = async (coinId: string) => {
     const amount = investmentAmounts[coinId] ?? 0;
     const userData = await supabase.auth.getUser();
@@ -600,10 +600,7 @@ export default function Home() {
   userSelect: "none",
   background: "#171a23"
 }}>
-  <HoverGuideHUD isSignedIn={!!user} />
-
   <PlaySpaceToggle
-  
     showPlaySpace={showPlaySpace}
     setShowPlaySpace={setShowPlaySpace}
   />
@@ -753,7 +750,6 @@ export default function Home() {
     {/* Show user info */}
   </>
 )}
-
 </div>
             </div>
           ) : (
@@ -791,11 +787,9 @@ export default function Home() {
                 >
                   Sign Out
                 </button>
-                
               </div>
             </>
           )}
-     
         </div>
       )}
 
@@ -854,7 +848,6 @@ export default function Home() {
       <div style={{ marginTop: 8, fontSize: 14, color: "#9ae6b4" }}>
         Expires in: <strong>02:15:42</strong>
       </div>
-      
       <button
         onClick={() => router.push("/business")}
         style={{
@@ -906,9 +899,7 @@ export default function Home() {
       >
         View Marketing Boost
       </button>
-      
     </div>
-    
   </div>
 
   {/* Art Explore Button */}
@@ -976,7 +967,6 @@ export default function Home() {
       >
         Explore Art
       </button>
-      
     </div>
 
     {/* BUSINESS CARDS with Countdown */}
@@ -1017,7 +1007,7 @@ export default function Home() {
                   alt={m.title}
                 />
               )}
-               <HoverGuideHUD isSignedIn={!!user} />
+              
               <div style={{ fontWeight: 700, color: "#fff", marginBottom: 4 }}>
                 {m.title}
               </div>
@@ -1036,21 +1026,16 @@ export default function Home() {
                 >
                   Visit Site
                 </a>
-                
               )}
               
             </div>
             
           );
-        
         })}
-       
-      
-
+        
     </div>
-    
+   
     {/* ADMIN Refresh Button */}
-    
     {user?.email === ADMIN_EMAIL && (
       <div style={{ marginTop: 24 }}>
         <button
@@ -1088,8 +1073,6 @@ export default function Home() {
           )}
         </div>
       )}
-      
     </div>
-    
   );
 }

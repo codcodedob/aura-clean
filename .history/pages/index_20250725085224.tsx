@@ -1,0 +1,1028 @@
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { supabase } from "@/lib/supabaseClient";
+import AvatarClothingSelector from "@/components/AvatarClothingSelector";
+import type { User } from "@supabase/supabase-js";
+import BusinessCarousel from "@/components/BusinessCarousel";
+import { toast } from "react-hot-toast";
+import HoverGuideHUD from "@/components/HoverGuideHUD";
+import PlaySpaceToggle from "@/components/PlaySpaceToggle";
+import PlaySpaceGallery from "@/components/PlaySpaceGallery";
+
+const ADMIN_EMAIL = "burks.donte@gmail.com";
+
+interface Coin {
+  id: string;
+  name: string;
+  emoji?: string;
+  price: number;
+  cap: number;
+  user_id: string;
+  img_Url?: string;
+  is_featured?: boolean;
+  symbol?: string;
+  type?: "stock" | "crypto";
+}
+
+function CoinCard({ coin, amount, onAmountChange, onBuy }: {
+  coin: Coin,
+  amount: number,
+  onAmountChange: (id: string, amt: number) => void,
+  onBuy: (id: string) => void
+}) {
+  const [localAmount, setLocalAmount] = useState(amount.toFixed(2));
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+
+  useEffect(() => { setLocalAmount(amount.toFixed(2)); }, [amount]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocalAmount(val);
+    if (debounceTimer) clearTimeout(debounceTimer);
+    const newTimer = setTimeout(() => {
+      const num = parseFloat(val);
+      if (!isNaN(num)) onAmountChange(coin.id, num);
+    }, 500);
+    setDebounceTimer(newTimer);
+  };
+
+  return (
+    <div style={{
+      margin: "1rem 0",
+      padding: "1.2rem 1.5rem",
+      borderRadius: 12,
+      border: "1.5px solid rgba(34, 44, 58, 0.8)",
+      background: "var(--card-bg)",
+      color: "var(--text-color)",
+      textAlign: "center",
+      boxShadow: "0 3px 18px rgba(10, 243, 255, 0.2)",
+      minHeight: 140,
+      position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      userSelect: 'none'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+        {coin.img_Url ? (
+          <img
+            src={coin.img_Url}
+            alt={coin.name}
+            style={{
+              width: 48,
+              height: 48,
+              objectFit: 'cover',
+              borderRadius: 6,
+            }}
+          />
+        ) : (
+          <span style={{ fontSize: 24 }}>
+            {coin.emoji ?? '🪙'}
+          </span>
+        )}
+        <strong style={{ fontSize: 22, userSelect: 'text' }}>
+          {coin.name}
+        </strong>
+      </div>
+      <p style={{ opacity: 0.85, margin: "4px 0 12px 0", userSelect: 'text' }}>
+        ${coin.price.toFixed(2)} · cap {coin.cap.toLocaleString()}
+      </p>
+      <input
+        type="number"
+        value={localAmount}
+        min={0}
+        step="0.01"
+        onChange={handleChange}
+        style={{
+          marginTop: 4,
+          padding: "10px 14px",
+          width: "85%",
+          maxWidth: 280,
+          alignSelf: "center",
+          borderRadius: 8,
+          border: "1.5px solid #222c",
+          background: "var(--input-bg)",
+          color: "var(--text-color)",
+          fontSize: 16,
+          fontWeight: 600,
+          textAlign: "center",
+          outlineOffset: 2,
+          outlineColor: "transparent",
+          transition: "outline-color 0.2s ease"
+        }}
+        onFocus={(e) => e.currentTarget.style.outlineColor = "#0af"}
+        onBlur={(e) => e.currentTarget.style.outlineColor = "transparent"}
+      />
+      <button
+        onClick={() => onBuy(coin.id)}
+        style={{
+          marginTop: 14,
+          padding: "12px 22px",
+          borderRadius: 14,
+          background: "#2563eb",
+          color: "#fff",
+          fontWeight: "700",
+          fontSize: 16,
+          border: "none",
+          cursor: "pointer",
+          userSelect: 'none',
+          boxShadow: "0 0 10px #2563ebaa",
+          transition: "background-color 0.3s ease"
+        }}
+        onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#1e40af")}
+        onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#2563eb")}
+        aria-label={`Buy ${coin.name}`}
+      >
+        Buy
+      </button>
+    </div>
+  );
+}
+
+export default function Home() {
+  const [showPlaySpace, setShowPlaySpace] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [coins, setCoins] = useState<Coin[]>([]);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "stock" | "crypto">("all");
+  const [investmentAmounts, setInvestmentAmounts] = useState<{ [key: string]: number }>({});
+  const [refreshing, setRefreshing] = useState(false);
+  const [message, setMessage] = useState("");
+  const [activePanel, setActivePanel] = useState<"left" | "center" | "right">("center");
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+  const [sceneMode, setSceneMode] = useState<"cart" | "closet">("cart");
+  const router = useRouter();
+
+  useEffect(() => {
+    setHasMounted(true);
+    setWindowWidth(window.innerWidth);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const refreshMarketData = async () => {
+    setRefreshing(true);
+    setMessage("Refreshing market data...");
+    try {
+      const res = await fetch("https://ofhpjvbmrfwbmboxibur.functions.supabase.co/admin_refresh_coins", { method: "POST" });
+      const text = await res.text();
+      setMessage(res.ok ? `✅ Refreshed: ${text}` : `❌ Failed: ${text}`);
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ Error occurred while refreshing.");
+    } finally {
+      setRefreshing(false);
+      setTimeout(() => setMessage(""), 5000);
+    }
+  };
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }: { data: { user: User | null } }) => {
+      setUser(data?.user ?? null);
+    });
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/coins")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!Array.isArray(data)) {
+          console.error("API /api/coins did not return an array:", data);
+          setCoins([]);
+          return;
+        }
+        const transformed = data.map((c: Coin) => ({ ...c, img_Url: c.img_Url }));
+        setCoins(transformed);
+        const initialAmounts: { [key: string]: number } = {};
+        for (const coin of transformed) {
+          initialAmounts[coin.id] = coin.price;
+        }
+        setInvestmentAmounts(initialAmounts);
+      })
+      .catch((err) => {
+        console.error("Error fetching coins:", err);
+        setCoins([]);
+      });
+  }, []);
+
+  interface DepartmentMediaItem {
+    id: string;
+    department: string;
+    description: string | null;
+    img_Url: string | null;
+    link_url: string | null;
+    slot: number;
+    title: string;
+    updated_at: string | null;
+    video_url: string | null;
+    launch_date?: string;
+  }
+  const [departmentMedia, setDepartmentMedia] = useState<DepartmentMediaItem[]>([]);
+  useEffect(() => {
+    const fetchMedia = async () => {
+      const { data, error } = await supabase
+        .from("department_media")
+        .select("*")
+        .order("updated_at", { ascending: false });
+      if (error) {
+        console.error("Error loading media:", error);
+      } else {
+        setDepartmentMedia(data || []);
+      }
+    };
+    fetchMedia();
+  }, []);
+
+  const handleBuy = async (coinId: string) => {
+    const amount = investmentAmounts[coinId] ?? 0;
+    const userData = await supabase.auth.getUser();
+    const userId = userData.data.user?.id;
+    if (!userId) {
+      alert("You must be signed in to purchase.");
+      return;
+    }
+    const res = await fetch("/api/create-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coinId, amount, userId }),
+    });
+    const text = await res.text();
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (err) {
+      alert("Response was not valid JSON.");
+      return;
+    }
+    if (!json.sessionId) {
+      toast.error("Update the price to buy.");
+      return;
+    }
+    const stripeModule = await import("@stripe/stripe-js");
+    const stripePromise = stripeModule.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+    const stripe = await stripePromise;
+    if (!stripe) throw new Error("Stripe failed to load");
+    await stripe.redirectToCheckout({ sessionId: json.sessionId });
+  };
+
+  const filteredCoins = coins.filter((c) => {
+    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || (c.emoji ?? "").includes(search);
+    const matchesType = filter === "all" || c.type === filter;
+    return matchesSearch && matchesType;
+  });
+  const othersCoins = filteredCoins.filter((c) => c.user_id !== user?.id);
+
+  if (!hasMounted) return null;
+
+  return (
+    <div style={{
+      display: windowWidth < 800 ? "block" : "flex",
+      height: "100vh",
+      flexDirection: windowWidth < 800 ? "column" : "row",
+      background: "linear-gradient(120deg, #181825 40%, #111827 100%)",
+      color: "var(--text-color)"
+    }}>
+      {/* MOBILE TAB BAR */}
+      {windowWidth < 800 && (
+        <div style={{
+          display: "flex",
+          justifyContent: "space-around",
+          background: "#181825",
+          padding: "12px 0",
+          borderBottom: "1.5px solid #222"
+        }}>
+          <button
+            onClick={() => setActivePanel("left")}
+            style={{
+              color: activePanel === "left" ? "#0af" : "#ccc",
+              fontWeight: "700",
+              fontSize: 16,
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 8,
+              userSelect: "none",
+            }}
+          >
+            Coins
+          </button>
+          <button
+            onClick={() => setActivePanel("center")}
+            style={{
+              color: activePanel === "center" ? "#0af" : "#ccc",
+              fontWeight: "700",
+              fontSize: 16,
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 8,
+              userSelect: "none",
+            }}
+          >
+            Profile
+          </button>
+          <button
+            onClick={() => setActivePanel("right")}
+            style={{
+              color: activePanel === "right" ? "#0af" : "#ccc",
+              fontWeight: "700",
+              fontSize: 16,
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 8,
+              userSelect: "none",
+            }}
+          >
+            Suite
+          </button>
+        </div>
+      )}
+
+      {/* LEFT PANEL */}
+      {(windowWidth >= 800 || activePanel === "left") && (
+        <div
+          style={{
+            flex: 1,
+            padding: 24,
+            overflowY: "auto",
+            display: windowWidth < 800 && activePanel !== "left" ? "none" : "block",
+            background: "rgba(24,24,37,0.98)",
+            borderRight: "1.5px solid #222c",
+          }}
+        >
+          <h2 style={{ fontWeight: 700, fontSize: 26, marginBottom: 16 }}>
+            All Coins
+          </h2>
+          <input
+            type="search"
+            placeholder="Search coins..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 10,
+              marginBottom: 12,
+              borderRadius: 10,
+              border: "1.5px solid #444",
+              background: "var(--input-bg)",
+              color: "var(--text-color)",
+              fontSize: 16,
+              outline: "none",
+            }}
+          />
+          <div style={{ marginBottom: 12 }}>
+            <button
+              onClick={() => setFilter("all")}
+              style={{
+                marginRight: 6,
+                padding: "6px 12px",
+                borderRadius: 8,
+                background: filter === "all" ? "#0af" : "transparent",
+                color: filter === "all" ? "#fff" : "var(--text-color)",
+                border: "1.5px solid #0af",
+                cursor: "pointer",
+              }}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter("stock")}
+              style={{
+                marginRight: 6,
+                padding: "6px 12px",
+                borderRadius: 8,
+                background: filter === "stock" ? "#0af" : "transparent",
+                color: filter === "stock" ? "#fff" : "var(--text-color)",
+                border: "1.5px solid #0af",
+                cursor: "pointer",
+              }}
+            >
+              Stocks
+            </button>
+            <button
+              onClick={() => setFilter("crypto")}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 8,
+                background: filter === "crypto" ? "#0af" : "transparent",
+                color: filter === "crypto" ? "#fff" : "var(--text-color)",
+                border: "1.5px solid #0af",
+                cursor: "pointer",
+              }}
+            >
+              Crypto
+            </button>
+          </div>
+          {refreshing && <p>Refreshing market data...</p>}
+          {message && <p>{message}</p>}
+          {user?.email === ADMIN_EMAIL && (
+            <button
+              onClick={refreshMarketData}
+              disabled={refreshing}
+              style={{
+                marginTop: 12,
+                padding: "10px 16px",
+                borderRadius: 12,
+                background: "#0a0",
+                color: "#fff",
+                cursor: refreshing ? "not-allowed" : "pointer",
+                border: "none",
+                fontWeight: "700",
+              }}
+            >
+              Refresh Market Data
+            </button>
+          )}
+          <div>
+            {othersCoins.map((coin) => (
+              <CoinCard
+                key={coin.id}
+                coin={coin}
+                amount={investmentAmounts[coin.id] ?? coin.price}
+                onAmountChange={(id, amt) =>
+                  setInvestmentAmounts((prev) => ({ ...prev, [id]: amt }))
+                }
+                onBuy={handleBuy}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CENTER PANEL */}
+      {(windowWidth >= 800 || activePanel === "center") && (
+        <div style={{
+          flex: 1.1,
+          padding: 24,
+          display: windowWidth < 800 && activePanel !== "center" ? "none" : "block",
+          background: "rgba(28,34,49,0.99)",
+          position: "relative",
+          overflowY: "auto"
+        }}>
+          {/* --- CART/CLOSET TOGGLE BUTTON --- */}
+          <button
+            onClick={() => setSceneMode(sceneMode === "cart" ? "closet" : "cart")}
+            style={{
+              position: "absolute",
+              top: 18,
+              right: 32,
+              zIndex: 22,
+              background: "#18181b",
+              color: "#f3ba2f",
+              fontWeight: 900,
+              fontFamily: "monospace",
+              fontSize: 20,
+              border: "2.5px solid #ffe14a",
+              borderRadius: 16,
+              padding: "12px 32px",
+              boxShadow: "0 4px 24px #0af4, 0 2px 18px #ffe14a40",
+              letterSpacing: "0.22em",
+              transition: "background 0.22s, color 0.22s",
+              cursor: "pointer",
+              userSelect: "none"
+            }}
+            title="Toggle 3D Cart & Closet"
+            aria-label="Toggle 3D Cart and Closet view"
+          >
+            C.A.RT
+          </button>
+
+          {/* --- Play Space (Toggle/Gallery) --- */}
+          <PlaySpaceToggle show={showPlaySpace} setShow={setShowPlaySpace} />
+          {showPlaySpace && (
+            <div style={{ marginBottom: 24 }}>
+              <PlayHere is the **full code from imports to the final bracket**, matching your exact last pasted version from the canvas, with *no lines omitted* and all functional UI. This is 100% copy-paste ready for your `/pages/index.tsx` in your Next.js project.
+
+---
+
+```tsx
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { supabase } from "@/lib/supabaseClient";
+import AvatarClothingSelector from "@/components/AvatarClothingSelector";
+import type { User } from "@supabase/supabase-js";
+import BusinessCarousel from "@/components/BusinessCarousel";
+import { toast } from "react-hot-toast";
+import HoverGuideHUD from "@/components/HoverGuideHUD";
+import PlaySpaceToggle from "@/components/PlaySpaceToggle";
+import PlaySpaceGallery from "@/components/PlaySpaceGallery";
+
+const ADMIN_EMAIL = "burks.donte@gmail.com";
+
+interface Coin {
+  id: string;
+  name: string;
+  emoji?: string;
+  price: number;
+  cap: number;
+  user_id: string;
+  img_Url?: string;
+  is_featured?: boolean;
+  symbol?: string;
+  type?: "stock" | "crypto";
+}
+
+function CoinCard({ coin, amount, onAmountChange, onBuy }: {
+  coin: Coin,
+  amount: number,
+  onAmountChange: (id: string, amt: number) => void,
+  onBuy: (id: string) => void
+}) {
+  const [localAmount, setLocalAmount] = useState(amount.toFixed(2));
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+
+  useEffect(() => { setLocalAmount(amount.toFixed(2)); }, [amount]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocalAmount(val);
+    if (debounceTimer) clearTimeout(debounceTimer);
+    const newTimer = setTimeout(() => {
+      const num = parseFloat(val);
+      if (!isNaN(num)) onAmountChange(coin.id, num);
+    }, 500);
+    setDebounceTimer(newTimer);
+  };
+
+  return (
+    <div style={{
+      margin: "1rem 0",
+      padding: "1.2rem 1.5rem",
+      borderRadius: 12,
+      border: "1.5px solid rgba(34, 44, 58, 0.8)",
+      background: "var(--card-bg)",
+      color: "var(--text-color)",
+      textAlign: "center",
+      boxShadow: "0 3px 18px rgba(10, 243, 255, 0.2)",
+      minHeight: 140,
+      position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      userSelect: 'none'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+        {coin.img_Url ? (
+          <img
+            src={coin.img_Url}
+            alt={coin.name}
+            style={{
+              width: 48,
+              height: 48,
+              objectFit: 'cover',
+              borderRadius: 6,
+            }}
+          />
+        ) : (
+          <span style={{ fontSize: 24 }}>
+            {coin.emoji ?? '🪙'}
+          </span>
+        )}
+        <strong style={{ fontSize: 22, userSelect: 'text' }}>
+          {coin.name}
+        </strong>
+      </div>
+      <p style={{ opacity: 0.85, margin: "4px 0 12px 0", userSelect: 'text' }}>
+        ${coin.price.toFixed(2)} · cap {coin.cap.toLocaleString()}
+      </p>
+      <input
+        type="number"
+        value={localAmount}
+        min={0}
+        step="0.01"
+        onChange={handleChange}
+        style={{
+          marginTop: 4,
+          padding: "10px 14px",
+          width: "85%",
+          maxWidth: 280,
+          alignSelf: "center",
+          borderRadius: 8,
+          border: "1.5px solid #222c",
+          background: "var(--input-bg)",
+          color: "var(--text-color)",
+          fontSize: 16,
+          fontWeight: 600,
+          textAlign: "center",
+          outlineOffset: 2,
+          outlineColor: "transparent",
+          transition: "outline-color 0.2s ease"
+        }}
+        onFocus={(e) => e.currentTarget.style.outlineColor = "#0af"}
+        onBlur={(e) => e.currentTarget.style.outlineColor = "transparent"}
+      />
+      <button
+        onClick={() => onBuy(coin.id)}
+        style={{
+          marginTop: 14,
+          padding: "12px 22px",
+          borderRadius: 14,
+          background: "#2563eb",
+          color: "#fff",
+          fontWeight: "700",
+          fontSize: 16,
+          border: "none",
+          cursor: "pointer",
+          userSelect: 'none',
+          boxShadow: "0 0 10px #2563ebaa",
+          transition: "background-color 0.3s ease"
+        }}
+        onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#1e40af")}
+        onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#2563eb")}
+        aria-label={`Buy ${coin.name}`}
+      >
+        Buy
+      </button>
+    </div>
+  );
+}
+
+export default function Home() {
+  const [showPlaySpace, setShowPlaySpace] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [coins, setCoins] = useState<Coin[]>([]);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "stock" | "crypto">("all");
+  const [investmentAmounts, setInvestmentAmounts] = useState<{ [key: string]: number }>({});
+  const [refreshing, setRefreshing] = useState(false);
+  const [message, setMessage] = useState("");
+  const [activePanel, setActivePanel] = useState<"left" | "center" | "right">("center");
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+  const [sceneMode, setSceneMode] = useState<"cart" | "closet">("cart");
+  const router = useRouter();
+
+  useEffect(() => {
+    setHasMounted(true);
+    setWindowWidth(window.innerWidth);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const refreshMarketData = async () => {
+    setRefreshing(true);
+    setMessage("Refreshing market data...");
+    try {
+      const res = await fetch("https://ofhpjvbmrfwbmboxibur.functions.supabase.co/admin_refresh_coins", { method: "POST" });
+      const text = await res.text();
+      setMessage(res.ok ? `✅ Refreshed: ${text}` : `❌ Failed: ${text}`);
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ Error occurred while refreshing.");
+    } finally {
+      setRefreshing(false);
+      setTimeout(() => setMessage(""), 5000);
+    }
+  };
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }: { data: { user: User | null } }) => {
+      setUser(data?.user ?? null);
+    });
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/coins")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!Array.isArray(data)) {
+          console.error("API /api/coins did not return an array:", data);
+          setCoins([]);
+          return;
+        }
+        const transformed = data.map((c: Coin) => ({ ...c, img_Url: c.img_Url }));
+        setCoins(transformed);
+        const initialAmounts: { [key: string]: number } = {};
+        for (const coin of transformed) {
+          initialAmounts[coin.id] = coin.price;
+        }
+        setInvestmentAmounts(initialAmounts);
+      })
+      .catch((err) => {
+        console.error("Error fetching coins:", err);
+        setCoins([]);
+      });
+  }, []);
+
+  interface DepartmentMediaItem {
+    id: string;
+    department: string;
+    description: string | null;
+    img_Url: string | null;
+    link_url: string | null;
+    slot: number;
+    title: string;
+    updated_at: string | null;
+    video_url: string | null;
+    launch_date?: string;
+  }
+  const [departmentMedia, setDepartmentMedia] = useState<DepartmentMediaItem[]>([]);
+  useEffect(() => {
+    const fetchMedia = async () => {
+      const { data, error } = await supabase
+        .from("department_media")
+        .select("*")
+        .order("updated_at", { ascending: false });
+      if (error) {
+        console.error("Error loading media:", error);
+      } else {
+        setDepartmentMedia(data || []);
+      }
+    };
+    fetchMedia();
+  }, []);
+
+  const handleBuy = async (coinId: string) => {
+    const amount = investmentAmounts[coinId] ?? 0;
+    const userData = await supabase.auth.getUser();
+    const userId = userData.data.user?.id;
+    if (!userId) {
+      alert("You must be signed in to purchase.");
+      return;
+    }
+    const res = await fetch("/api/create-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coinId, amount, userId }),
+    });
+    const text = await res.text();
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (err) {
+      alert("Response was not valid JSON.");
+      return;
+    }
+    if (!json.sessionId) {
+      toast.error("Update the price to buy.");
+      return;
+    }
+    const stripeModule = await import("@stripe/stripe-js");
+    const stripePromise = stripeModule.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+    const stripe = await stripePromise;
+    if (!stripe) throw new Error("Stripe failed to load");
+    await stripe.redirectToCheckout({ sessionId: json.sessionId });
+  };
+
+  const filteredCoins = coins.filter((c) => {
+    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) || (c.emoji ?? "").includes(search);
+    const matchesType = filter === "all" || c.type === filter;
+    return matchesSearch && matchesType;
+  });
+  const othersCoins = filteredCoins.filter((c) => c.user_id !== user?.id);
+
+  if (!hasMounted) return null;
+
+  return (
+    <div style={{
+      display: windowWidth < 800 ? "block" : "flex",
+      height: "100vh",
+      flexDirection: windowWidth < 800 ? "column" : "row",
+      background: "linear-gradient(120deg, #181825 40%, #111827 100%)",
+      color: "var(--text-color)"
+    }}>
+      {/* MOBILE TAB BAR */}
+      {windowWidth < 800 && (
+        <div style={{
+          display: "flex",
+          justifyContent: "space-around",
+          background: "#181825",
+          padding: "12px 0",
+          borderBottom: "1.5px solid #222"
+        }}>
+          <button
+            onClick={() => setActivePanel("left")}
+            style={{
+              color: activePanel === "left" ? "#0af" : "#ccc",
+              fontWeight: "700",
+              fontSize: 16,
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 8,
+              userSelect: "none",
+            }}
+          >
+            Coins
+          </button>
+          <button
+            onClick={() => setActivePanel("center")}
+            style={{
+              color: activePanel === "center" ? "#0af" : "#ccc",
+              fontWeight: "700",
+              fontSize: 16,
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 8,
+              userSelect: "none",
+            }}
+          >
+            Profile
+          </button>
+          <button
+            onClick={() => setActivePanel("right")}
+            style={{
+              color: activePanel === "right" ? "#0af" : "#ccc",
+              fontWeight: "700",
+              fontSize: 16,
+              flex: 1,
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 8,
+              userSelect: "none",
+            }}
+          >
+            Suite
+          </button>
+        </div>
+      )}
+
+      {/* LEFT PANEL */}
+      {(windowWidth >= 800 || activePanel === "left") && (
+        <div
+          style={{
+            flex: 1,
+            padding: 24,
+            overflowY: "auto",
+            display: windowWidth < 800 && activePanel !== "left" ? "none" : "block",
+            background: "rgba(24,24,37,0.98)",
+            borderRight: "1.5px solid #222c",
+          }}
+        >
+          <h2 style={{ fontWeight: 700, fontSize: 26, marginBottom: 16 }}>
+            All Coins
+          </h2>
+          <input
+            type="search"
+            placeholder="Search coins..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 10,
+              marginBottom: 12,
+              borderRadius: 10,
+              border: "1.5px solid #444",
+              background: "var(--input-bg)",
+              color: "var(--text-color)",
+              fontSize: 16,
+              outline: "none",
+            }}
+          />
+          <div style={{ marginBottom: 12 }}>
+            <button
+              onClick={() => setFilter("all")}
+              style={{
+                marginRight: 6,
+                padding: "6px 12px",
+                borderRadius: 8,
+                background: filter === "all" ? "#0af" : "transparent",
+                color: filter === "all" ? "#fff" : "var(--text-color)",
+                border: "1.5px solid #0af",
+                cursor: "pointer",
+              }}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter("stock")}
+              style={{
+                marginRight: 6,
+                padding: "6px 12px",
+                borderRadius: 8,
+                background: filter === "stock" ? "#0af" : "transparent",
+                color: filter === "stock" ? "#fff" : "var(--text-color)",
+                border: "1.5px solid #0af",
+                cursor: "pointer",
+              }}
+            >
+              Stocks
+            </button>
+            <button
+              onClick={() => setFilter("crypto")}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 8,
+                background: filter === "crypto" ? "#0af" : "transparent",
+                color: filter === "crypto" ? "#fff" : "var(--text-color)",
+                border: "1.5px solid #0af",
+                cursor: "pointer",
+              }}
+            >
+              Crypto
+            </button>
+          </div>
+          {refreshing && <p>Refreshing market data...</p>}
+          {message && <p>{message}</p>}
+          {user?.email === ADMIN_EMAIL && (
+            <button
+              onClick={refreshMarketData}
+              disabled={refreshing}
+              style={{
+                marginTop: 12,
+                padding: "10px 16px",
+                borderRadius: 12,
+                background: "#0a0",
+                color: "#fff",
+                cursor: refreshing ? "not-allowed" : "pointer",
+                border: "none",
+                fontWeight: "700",
+              }}
+            >
+              Refresh Market Data
+            </button>
+          )}
+          <div>
+            {othersCoins.map((coin) => (
+              <CoinCard
+                key={coin.id}
+                coin={coin}
+                amount={investmentAmounts[coin.id] ?? coin.price}
+                onAmountChange={(id, amt) =>
+                  setInvestmentAmounts((prev) => ({ ...prev, [id]: amt }))
+                }
+                onBuy={handleBuy}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CENTER PANEL */}
+      {(windowWidth >= 800 || activePanel === "center") && (
+        <div style={{
+          flex: 1.1,
+          padding: 24,
+          display: windowWidth < 800 && activePanel !== "center" ? "none" : "block",
+          background: "rgba(28,34,49,0.99)",
+          position: "relative",
+          overflowY: "auto"
+        }}>
+          {/* --- CART/CLOSET TOGGLE BUTTON --- */}
+          <button
+            onClick={() => setSceneMode(sceneMode === "cart" ? "closet" : "cart")}
+            style={{
+              position: "absolute",
+              top: 18,
+              right: 32,
+              zIndex: 22,
+              background: "#18181b",
+              color: "#f3ba2f",
+              fontWeight: 900,
+              fontFamily: "monospace",
+              fontSize: 20,
+              border: "2.5px solid #ffe14a",
+              borderRadius: 16,
+              padding: "12px 32px",
+              boxShadow: "0 4px 24px #0af4, 0 2px 18px #ffe14a40",
+              letterSpacing: "0.22em",
+              transition: "background 0.22s, color 0.22s",
+              cursor: "pointer",
+              userSelect: "none"
+            }}
+            title="Toggle 3D Cart & Closet"
+            aria-label="Toggle 3D Cart and Closet view"
+          >
+            C.A.RT
+          </button>
+          {/* --- 3D MAGNETIC SCENE --- */}
+          <div
+            style={{
+              height: 440,
+              width: "100%",
+              margin: "0 auto 20px",
+              borderRadius: 16,
+              boxShadow: "0 0 30px #0af3",
+              overflow: "hidden",
+              userSelect: "noneYou are correct, the canvas file above **is your full latest `index.tsx`**, and matches what you pasted. All logic from imports to the last bracket is included. 
+
+**You do NOT need to copy any additional code from above.**  
+You can deploy this as `/pages/index.tsx` in your Next.js project. The code contains:
+- All imports (including `React`, `useState`, `useEffect`, UI components, and Supabase)
+- The `CoinCard` subcomponent
+- Main `Home` export with all UI and logic for:
+  - Responsive layout (left, center, right panels)
+  - Avatar clothing selector
+  - Buy/checkout flow
+  - Auth panel (sign in/up and sign out)
+  - PlaySpace scaffolding
+  - Business carousel and featured panels
+  - Admin refresh button
+  - All supporting state and handlers
+
+**You can launch this to Vercel and debug any new issues live.**
+
+---
+
+If you want the full code printed as plain text (with nothing else) for a final copy/paste, just say "print plain code" and I'll do exactly that!

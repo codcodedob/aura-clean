@@ -209,7 +209,7 @@ export default function Home() {
   //   "/models/base-inner.glb",
   //   "/models/base-outer.glb",
   // ];
-  <HoverGuideHUD isSignedIn={!!user} />
+
   const refreshMarketData = async () => {
     setRefreshing(true);
     setMessage("Refreshing market data...");
@@ -307,7 +307,7 @@ export default function Home() {
     fetchMedia();
   }, []);
   
-  <HoverGuideHUD isSignedIn={!!user} />
+  
   const handleBuy = async (coinId: string) => {
     const amount = investmentAmounts[coinId] ?? 0;
     const userData = await supabase.auth.getUser();
@@ -600,10 +600,7 @@ export default function Home() {
   userSelect: "none",
   background: "#171a23"
 }}>
-  <HoverGuideHUD isSignedIn={!!user} />
-
   <PlaySpaceToggle
-  
     showPlaySpace={showPlaySpace}
     setShowPlaySpace={setShowPlaySpace}
   />
@@ -1017,7 +1014,7 @@ export default function Home() {
                   alt={m.title}
                 />
               )}
-               <HoverGuideHUD isSignedIn={!!user} />
+              
               <div style={{ fontWeight: 700, color: "#fff", marginBottom: 4 }}>
                 {m.title}
               </div>
@@ -1045,12 +1042,11 @@ export default function Home() {
         
         })}
        
-      
+       <HoverGuideHUD isSignedIn={!!user} />
 
     </div>
-    
+   
     {/* ADMIN Refresh Button */}
-    
     {user?.email === ADMIN_EMAIL && (
       <div style={{ marginTop: 24 }}>
         <button
@@ -1090,6 +1086,5 @@ export default function Home() {
       )}
       
     </div>
-    
   );
 }

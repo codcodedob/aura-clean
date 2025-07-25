@@ -600,10 +600,7 @@ export default function Home() {
   userSelect: "none",
   background: "#171a23"
 }}>
-  <HoverGuideHUD isSignedIn={!!user} />
-
   <PlaySpaceToggle
-  
     showPlaySpace={showPlaySpace}
     setShowPlaySpace={setShowPlaySpace}
   />

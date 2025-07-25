@@ -307,7 +307,7 @@ export default function Home() {
     fetchMedia();
   }, []);
   
-  <HoverGuideHUD isSignedIn={!!user} />
+  
   const handleBuy = async (coinId: string) => {
     const amount = investmentAmounts[coinId] ?? 0;
     const userData = await supabase.auth.getUser();
@@ -600,10 +600,7 @@ export default function Home() {
   userSelect: "none",
   background: "#171a23"
 }}>
-  <HoverGuideHUD isSignedIn={!!user} />
-
   <PlaySpaceToggle
-  
     showPlaySpace={showPlaySpace}
     setShowPlaySpace={setShowPlaySpace}
   />

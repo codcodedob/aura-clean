@@ -91,25 +91,3 @@ code {
     transform: scale(1);
   }
 }
-.spinning-coin {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #ffe14a 70%, #f59e0b 90%);
-  border: 2.5px solid #c9a100;
-  box-shadow: 0 2px 16px #ffe14a80, 0 0 0 #f59e0b99 inset;
-  animation: spincoin 0.8s linear infinite;
-  position: relative;
-}
-.spinning-coin::after {
-  content: '🪙';
-  font-size: 2rem;
-  position: absolute;
-  top: 2px; left: 0; right: 0; text-align: center;
-  color: #b99c00;
-  pointer-events: none;
-}
-@keyframes spincoin {
-  0%   { transform: rotateY(0deg);}
-  100% { transform: rotateY(360deg);}
-}
